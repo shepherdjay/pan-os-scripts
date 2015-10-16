@@ -1,2 +1,3 @@
 pan-python
 xlwt
+PyYAML
