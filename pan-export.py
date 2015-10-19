@@ -9,8 +9,8 @@ class Config:
     def __init__(self, filename):
         with open(filename, 'r') as stream:
             config = yaml.load(stream)
-        self.panorama_hostname = config["panorama_hostname"]
-        self.panorama_api_key = config["panorama_api_key"]
+        self.firewall_hostname = config["firewall_hostname"]
+        self.firewall_api_key = config["firewall_api_key"]
 
 
 def gather_rules(hostname, api_key):
@@ -22,7 +22,7 @@ def gather_rules(hostname, api_key):
 
 def main():
     config = Config("config.yml")
-    print(gather_rules(config.panorama_hostname, config.panorama_api_key))
+    print(gather_rules(config.firewall_hostname, config.firewall_api_key))
 
 
 if __name__ == "__main__":
