@@ -4,6 +4,7 @@ __author__ = 'js201393'
 # noinspection PyPackageRequirements
 import pan.xapi
 import yaml
+import xmltodict
 
 
 class Config:
@@ -21,7 +22,7 @@ def retrieve_firewall_configuration(hostname, api_key, command=None):
     :param api_key:  API key to access firewall configuration
     :param command: List of strings where each element is a component of the xpath to retrieve. If this is the empty
     list or none, the full config is returned
-    :return:
+    :return: Dictionary containing firewall configuration
     """
     if command is None:
         command = []
@@ -30,12 +31,16 @@ def retrieve_firewall_configuration(hostname, api_key, command=None):
     path = '/' + '/'.join(command)
     firewall.show(path)
 
-    return firewall.xml_result()
+    return xmltodict.parse(firewall.xml_result())
 
 
 def main():
-    config = Config('config.yml')
-    print(retrieve_firewall_configuration(config.firewall_hostname, config.firewall_api_key))
+    script_config = Config('config.yml')
+    firewall_config = retrieve_firewall_configuration(script_config.firewall_hostname, script_config.firewall_api_key)
+    addresses = firewall_config['config']['shared']['address']['entry']
+
+    for address in addresses:
+        print(address['@name'] + " " + address['ip-netmask'])
 
 
 if __name__ == '__main__':
