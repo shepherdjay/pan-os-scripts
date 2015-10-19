@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__author__ = 'js201393'
+__author__ = 'Jay Shepherd'
 
 # noinspection PyPackageRequirements
 import pan.xapi
@@ -15,33 +15,39 @@ class Config:
         self.firewall_api_key = config['firewall_api_key']
 
 
-def retrieve_firewall_configuration(hostname, api_key, command=None):
+def retrieve_firewall_configuration(hostname, api_key, config='running'):
     """
 
     :param hostname: Hostname (FQDN) of firewall to retreive active configuration form
     :param api_key:  API key to access firewall configuration
-    :param command: List of strings where each element is a component of the xpath to retrieve. If this is the empty
-    list or none, the full config is returned
+    ;param config:
     :return: Dictionary containing firewall configuration
     """
-    if command is None:
-        command = []
     firewall = pan.xapi.PanXapi(hostname=hostname, api_key=api_key)
-
-    path = '/' + '/'.join(command)
-    firewall.show(path)
-
+    command = {
+        'show': {
+            'config': {
+                config: {}
+            }
+        }
+    }
+    path = xmltodict.unparse(command)
+    # Removes unicode xml line
+    path = path.split('\n')[1]
+    firewall.op(path)
     return xmltodict.parse(firewall.xml_result())
+
+
+def retrieve_run_and_shared(hostname, api_key):
+    running_config = retrieve_firewall_configuration(hostname, api_key, config='running')
+    pushed_config = retrieve_firewall_configuration(hostname, api_key, config='pushed-shared-policy')
+    return running_config, pushed_config
 
 
 def main():
     script_config = Config('config.yml')
-    firewall_config = retrieve_firewall_configuration(script_config.firewall_hostname, script_config.firewall_api_key)
-    addresses = firewall_config['config']['shared']['address']['entry']
-
-    for address in addresses:
-        print(address['@name'] + " " + address['ip-netmask'])
-
+    print(retrieve_run_and_shared(script_config.firewall_hostname,script_config.firewall_api_key))
+    print('lol')
 
 if __name__ == '__main__':
     main()
