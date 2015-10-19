@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 __author__ = 'js201393'
 
+# noinspection PyPackageRequirements
 import pan.xapi
 import yaml
 
