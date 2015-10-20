@@ -62,7 +62,7 @@ def get_headers(dict, preferred_header_order=[]):
     ordered_headers = []
     for header in preferred_header_order:
         if header in scraped_headers:
-            ordered_headers += header
+            ordered_headers.append(header)
             scraped_headers.remove(header)
     ordered_headers.append(sorted(list(scraped_headers)))
 
