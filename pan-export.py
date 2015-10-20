@@ -58,8 +58,8 @@ def get_headers(dict, preferred_header_order=None):
     if preferred_header_order is None:
         preferred_header_order = []
     scraped_headers = set()
-    for rule_id in dict:
-        for header in rule_id:
+    for item in dict:
+        for header in item:
             scraped_headers.add(header)
 
     ordered_headers = []
@@ -68,22 +68,30 @@ def get_headers(dict, preferred_header_order=None):
             ordered_headers.append(header)
             scraped_headers.remove(header)
     ordered_headers += sorted(list(scraped_headers))
-
     return ordered_headers
 
 
-def write_to_excel(dict):
+def write_to_excel(dict, filename, preferred_header_order=None):
     # First get headers for excel sheet from helper function
-    headers = get_headers(dict)
+    headers = get_headers(dict, preferred_header_order)
     # Define workbook
-    workbook = xlsxwriter.Workbook('output.xlsx')
+    workbook = xlsxwriter.Workbook(filename)
     worksheet = workbook.add_worksheet()
     row = 0
-    col = -1
+    col = 0
     # Write Headers
+    worksheet.write(0, 0, 'Order')
     for header in headers:
         col += 1
         worksheet.write(row, col, header)
+    # Write out rules
+    for i in range(0, len(dict) - 1):
+        col = 0
+        row = i + 1
+        worksheet.write(row, col, row)
+        for header in headers:
+            col += 1
+            worksheet.write(row, col, str(dict[i].get(header, '')))
     workbook.close()
 
 
@@ -91,7 +99,6 @@ def main():
     script_config = Config('config.yml')
 
     # Retrieve both configurations from firewall
-
     running_config = retrieve_firewall_configuration(script_config.firewall_hostname,
                                                      script_config.firewall_api_key,
                                                      config='running')
@@ -100,7 +107,6 @@ def main():
                                                     config='pushed-shared-policy')
 
     # Store objects from config in separate dictionaries
-
     address = safeget(pushed_config, 'policy', 'panorama', 'address', 'entry')
     address_groups = safeget(pushed_config, 'policy', 'panorama', 'address-group', 'entry', )
     pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
@@ -108,8 +114,30 @@ def main():
     post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry') \
                     + safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
                               'entry')
+
+    # Combine the pre, on-device, and post rule sets into a single view
     combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
-    write_to_excel(combined_rulebase)
+
+    # Finally write the information to excel files.
+    rulebase_headers = ['@name',
+                        'action',
+                        'tag',
+                        'rule-type',
+                        'from',
+                        'source',
+                        'negate-source',
+                        'source-user',
+                        'hip-profiles',
+                        'to',
+                        'destination',
+                        'negate-destination',
+                        'application',
+                        'service',
+                        'profile-setting',
+                        'description']
+    write_to_excel(combined_rulebase,
+                   '{}-combined-rules.xlsx'.format(script_config.firewall_hostname),
+                   rulebase_headers)
 
 
 if __name__ == '__main__':
