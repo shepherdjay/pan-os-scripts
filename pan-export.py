@@ -29,11 +29,13 @@ def retrieve_firewall_configuration(hostname, api_key, config='running'):
     return xmltodict.parse(firewall.xml_result())
 
 
-def retrieve_run_and_shared(hostname, api_key):
-    return running_config, pushed_config
-
-
 def safeget(dct, *keys):
+    """
+    Takes a dictionary and key path. Checks if key exists, if not returns empty list.
+    :param dct: Dictionary to iterate over
+    :param keys: Keys to iterate over
+    :return: Returns dictionary with reference to key if exists, else returns empty list.
+    """
     for key in keys:
         try:
             dct = dct[key]
