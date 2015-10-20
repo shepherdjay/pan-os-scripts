@@ -2,3 +2,4 @@ pan-python
 xlwt
 PyYAML
 xmltodict
+xlsxwriter
