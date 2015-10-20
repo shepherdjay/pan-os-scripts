@@ -33,6 +33,15 @@ def retrieve_run_and_shared(hostname, api_key):
     return running_config, pushed_config
 
 
+def safeget(dct, *keys):
+    for key in keys:
+        try:
+            dct = dct[key]
+        except KeyError:
+            return list()
+    return dct
+
+
 def main():
     script_config = Config('config.yml')
 
@@ -46,31 +55,13 @@ def main():
 
     # Store objects from config in separate dictionaries
 
-    try:
-        address = pushed_config['policy']['panorama']['address']['entry']
-    except:
-        address = ''
-    try:
-        address_groups = pushed_config['policy']['panorama']['address-group']['entry']
-    except:
-        address_groups = ''
-    try:
-        pre_rulebase = pushed_config['policy']['panorama']['pre-rulebase']['security']['rules']['entry']
-    except:
-        pre_rulebase = ''
-    try:
-        device_rulebase = running_config['config']['devices']['entry']['vsys']['entry']['rulebase']
-    except:
-        device_rulebase = ''
-    try:
-        post_rulebase = pushed_config['policy']['panorama']['post-rulebase']['security']['rules']['entry'] + \
-                        pushed_config['policy']['panorama']['post-rulebase']['default-security-rules']['rules']['entry']
-    except:
-        try:
-            post_rulebase = pushed_config['policy']['panorama']['post-rulebase']['default-security-rules']['rules'][
-                'entry']
-        except:
-            post_rulebase = ''
+    address = safeget(pushed_config, 'policy', 'panorama', 'address', 'entry')
+    address_groups = safeget(pushed_config, 'policy', 'panorama', 'address-group', 'entry', )
+    pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
+    device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase')
+    post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry') \
+                    + safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
+                              'entry')
     print('lol')
 
 
