@@ -71,9 +71,9 @@ def get_headers(dict, preferred_header_order=None):
     return ordered_headers
 
 
-def write_to_excel(dict, filename, preferred_header_order=None):
+def write_to_excel(item_list, filename, preferred_header_order=None):
     # First get headers for excel sheet from helper function
-    headers = get_headers(dict, preferred_header_order)
+    headers = get_headers(item_list, preferred_header_order)
     # Define workbook
     workbook = xlsxwriter.Workbook(filename)
     worksheet = workbook.add_worksheet()
@@ -85,13 +85,16 @@ def write_to_excel(dict, filename, preferred_header_order=None):
         col += 1
         worksheet.write(row, col, header)
     # Write out rules
-    for i in range(0, len(dict) - 1):
+    for i in range(0, len(item_list) - 1):
         col = 0
         row = i + 1
         worksheet.write(row, col, row)
         for header in headers:
             col += 1
-            worksheet.write(row, col, str(dict[i].get(header, '')))
+            cell = item_list[i].get(header, '')
+            if isinstance(cell, dict):
+                cell = cell.get('member', cell)
+            worksheet.write(row, col, str(cell))
     workbook.close()
 
 
