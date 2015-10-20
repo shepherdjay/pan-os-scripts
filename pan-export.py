@@ -44,6 +44,19 @@ def safeget(dct, *keys):
     return dct
 
 
+def get_headers(dict):
+    """
+    Takes a nested dictionary and returns headers as a set. For PanOS the top level of each dictionary
+    database is a entry "ID" field of value xxx. Which then contain additional attributes/keys with values.
+    :param dict: Dictionary in format correctly
+    :return: Set
+    """
+    headers = set()
+    for rule_id in dict:
+        for header in rule_id:
+            headers.add(header)
+    return headers
+
 def main():
     script_config = Config('config.yml')
 
@@ -64,7 +77,7 @@ def main():
     post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry') \
                     + safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
                               'entry')
-    print('lol')
+    combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
 
 
 if __name__ == '__main__':
