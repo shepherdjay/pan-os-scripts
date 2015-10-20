@@ -37,7 +37,7 @@ def safeget(dct, *keys):
     for key in keys:
         try:
             dct = dct[key]
-        except KeyError:
+        except (KeyError, TypeError):
             return list()
     return dct
 
@@ -58,7 +58,7 @@ def main():
     address = safeget(pushed_config, 'policy', 'panorama', 'address', 'entry')
     address_groups = safeget(pushed_config, 'policy', 'panorama', 'address-group', 'entry', )
     pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
-    device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase')
+    device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase', 'entry')
     post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry') \
                     + safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
                               'entry')
