@@ -45,7 +45,7 @@ def safeget(dct, *keys):
     return dct
 
 
-def get_headers(dict, preferred_header_order=[]):
+def get_headers(dict, preferred_header_order=None):
     """
     Takes a nested dictionary and returns headers as a unique list. For PanOS the top level of each dictionary
     database is a entry "ID" field of value xxx. Which then contain additional attributes/keys with values.
@@ -55,6 +55,8 @@ def get_headers(dict, preferred_header_order=[]):
     will be sorted and appended to the end of the list.
     :return: list of found headers, in an order approximately following the preferred order
     """
+    if preferred_header_order is None:
+        preferred_header_order = []
     scraped_headers = set()
     for rule_id in dict:
         for header in rule_id:
@@ -65,7 +67,7 @@ def get_headers(dict, preferred_header_order=[]):
         if header in scraped_headers:
             ordered_headers.append(header)
             scraped_headers.remove(header)
-    ordered_headers.append(sorted(list(scraped_headers)))
+    ordered_headers += sorted(list(scraped_headers))
 
     return ordered_headers
 
