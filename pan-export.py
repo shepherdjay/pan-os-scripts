@@ -5,6 +5,7 @@ __author__ = 'Jay Shepherd'
 import pan.xapi
 import yaml
 import xmltodict
+import xlsxwriter
 
 
 class Config:
@@ -46,7 +47,7 @@ def safeget(dct, *keys):
 
 def get_headers(dict, preferred_header_order=[]):
     """
-    Takes a nested dictionary and returns headers as a set. For PanOS the top level of each dictionary
+    Takes a nested dictionary and returns headers as a unique list. For PanOS the top level of each dictionary
     database is a entry "ID" field of value xxx. Which then contain additional attributes/keys with values.
     :param dict: Dictionary in format correctly
     :param preferred_header_order List of headers. If one or more headers in this list are found in the provided
@@ -67,6 +68,22 @@ def get_headers(dict, preferred_header_order=[]):
     ordered_headers.append(sorted(list(scraped_headers)))
 
     return ordered_headers
+
+
+def write_to_excel(dict):
+    # First get headers for excel sheet from helper function
+    headers = get_headers(dict)
+    # Define workbook
+    workbook = xlsxwriter.Workbook('output.xlsx')
+    worksheet = workbook.add_worksheet()
+    row = 0
+    col = -1
+    # Write Headers
+    for header in headers:
+        col += 1
+        worksheet.write(row, col, header)
+    workbook.close()
+
 
 def main():
     script_config = Config('config.yml')
@@ -90,6 +107,7 @@ def main():
                     + safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
                               'entry')
     combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
+    write_to_excel(combined_rulebase)
 
 
 if __name__ == '__main__':
