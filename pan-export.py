@@ -29,11 +29,13 @@ def retrieve_firewall_configuration(hostname, api_key, config='running'):
     return xmltodict.parse(firewall.xml_result())
 
 
-def retrieve_run_and_shared(hostname, api_key):
-    return running_config, pushed_config
-
-
 def safeget(dct, *keys):
+    """
+    Takes a dictionary and key path. Checks if key exists, if not returns empty list.
+    :param dct: Dictionary to iterate over
+    :param keys: Keys to iterate over
+    :return: Returns dictionary with reference to key if exists, else returns empty list.
+    """
     for key in keys:
         try:
             dct = dct[key]
@@ -41,6 +43,19 @@ def safeget(dct, *keys):
             return list()
     return dct
 
+
+def get_headers(dict):
+    """
+    Takes a nested dictionary and returns headers as a set. For PanOS the top level of each dictionary
+    database is a entry "ID" field of value xxx. Which then contain additional attributes/keys with values.
+    :param dict: Dictionary in format correctly
+    :return: Set
+    """
+    headers = set()
+    for rule_id in dict:
+        for header in rule_id:
+            headers.add(header)
+    return headers
 
 def main():
     script_config = Config('config.yml')
@@ -62,7 +77,7 @@ def main():
     post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry') \
                     + safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
                               'entry')
-    print('lol')
+    combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
 
 
 if __name__ == '__main__':
