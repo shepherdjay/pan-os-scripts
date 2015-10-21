@@ -6,6 +6,7 @@ import pan.xapi
 import yaml
 import xmltodict
 import xlsxwriter
+import datetime
 
 
 class Config:
@@ -138,6 +139,7 @@ def do_the_things(firewall, api_key):
     :param api_key: API key to query
     ;return:
     """
+    # "Zhu Li, do the thing!"
     # Retrieve both possible configurations from firewall
     running_config = retrieve_firewall_configuration(firewall,
                                                      api_key,
@@ -200,8 +202,28 @@ def do_the_things(firewall, api_key):
                             }
 
     # Finally let's write the damn thing
+    current_time = datetime.datetime.now()
+    filename = (
+        "{year}-"
+        "{month}-"
+        "{day}-"
+        "{hour}{minute}{second}-"
+        "{firewall}-combined-rules"
+        ".xlxs"
+    )
+
+    filename = filename.format(
+        firewall=firewall,
+        year=pad_to_two_digits(current_time.year),
+        month=pad_to_two_digits(current_time.month),
+        day=pad_to_two_digits(current_time.day),
+        hour=pad_to_two_digits(current_time.hour),
+        minute=pad_to_two_digits(current_time.minute),
+        second=pad_to_two_digits(current_time.second)
+    )
+
     write_to_excel(combined_rulebase,
-                   '{}-combined-rules.xlsx'.format(firewall),
+                   filename,
                    rulebase_headers_order,
                    rulebase_headers_remove,
                    rulebase_default_map
@@ -210,6 +232,16 @@ def do_the_things(firewall, api_key):
     # I should print something to let user know it worked.
     # Dharma says feedback is important for good coding.
     print('{} processed. Please check directory for output files.'.format(firewall))
+
+
+def pad_to_two_digits(n):
+    """
+    Add leading zeros to format a number as at least two digits
+    :param n: any number
+    :return: The number as a string with at least two digits
+    """
+    return str(n).zfill(2)
+
 
 def main():
     script_config = Config('config.yml')
