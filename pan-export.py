@@ -77,24 +77,24 @@ def write_to_excel(item_list, filename, preferred_header_order=None):
     # Define workbook
     workbook = xlsxwriter.Workbook(filename)
     worksheet = workbook.add_worksheet()
-    row = 0
-    col = 0
+    excel_row = 0
+    excel_col = 0
     # Write Headers
     worksheet.write(0, 0, 'Order')
     for header in headers:
-        col += 1
-        worksheet.write(row, col, header)
+        excel_col += 1
+        worksheet.write(excel_row, excel_col, header)
     # Write out rules
     for i in range(0, len(item_list) - 1):
-        col = 0
-        row = i + 1
-        worksheet.write(row, col, row)
+        excel_col = 0
+        excel_row = i + 1
+        worksheet.write(excel_row, excel_col, excel_row)
         for header in headers:
-            col += 1
+            excel_col += 1
             cell = item_list[i].get(header, '')
             if isinstance(cell, dict):
                 cell = cell.get('member', cell)
-            worksheet.write(row, col, str(cell))
+            worksheet.write(excel_row, excel_col, str(cell))
     workbook.close()
 
 
