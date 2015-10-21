@@ -47,14 +47,15 @@ def safeget(dct, *keys):
     return dct
 
 
-def get_headers(dict, preferred_header_order=None, headers_to_remove=None):
+def get_headers(data_dict, preferred_header_order=None, headers_to_remove=None):
     """
     Takes a nested dictionary and returns headers as a unique list. For PanOS the top level of each dictionary
     database is a entry "ID" field of value xxx. Which then contain additional attributes/keys with values.
-    :param dict: Dictionary in format correctly
+    :param data_dict: Dictionary in format correctly
     :param preferred_header_order List of headers. If one or more headers in this list are found in the provided
-    dictionary, they will be returned in the same order they occur in this list. Headers found in the dict but not in this list
-    will be sorted and appended to the end of the list.
+    dictionary, they will be returned in the same order they occur in this list. Headers found in the dict but not in
+    this list will be sorted and appended to the end of the list.
+    :param headers_to_remove Collection of headers which will not appear in the returned list.
     :return: list of found headers, in an order approximately following the preferred order
     """
     if preferred_header_order is None:
@@ -62,14 +63,12 @@ def get_headers(dict, preferred_header_order=None, headers_to_remove=None):
     if headers_to_remove is None:
         headers_to_remove = []
     scraped_headers = set()
-    for item in dict:
+    for item in data_dict:
         for header in item:
             scraped_headers.add(header)
 
     ordered_headers = []
-    for header in headers_to_remove:
-        if header in scraped_headers:
-            scraped_headers.remove(header)
+    scraped_headers = scraped_headers.difference(set(headers_to_remove))
     for header in preferred_header_order:
         if header in scraped_headers:
             ordered_headers.append(header)
