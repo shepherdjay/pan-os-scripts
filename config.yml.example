@@ -1,2 +1,4 @@
-firewall_hostname: firewall-1.example.com
+firewall_hostnames:
+  - firewall-1.example.com
+  - firewall-2.example.com
 firewall_api_key: APIKEYGOESHERE

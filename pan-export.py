@@ -12,13 +12,14 @@ class Config:
     def __init__(self, filename):
         with open(filename, 'r') as stream:
             config = yaml.load(stream)
-        self.firewall_hostname = config['firewall_hostname']
         self.firewall_api_key = config['firewall_api_key']
+        self.firewall_hostnames = config['firewall_hostnames']
 
 
 def retrieve_firewall_configuration(hostname, api_key, config='running'):
     """
-
+    This takes the FQDN of the firewall and retrieves the requested config.
+    Defaults to running.
     :param hostname: Hostname (FQDN) of firewall to retrieve configuration from
     :param api_key:  API key to access firewall configuration
     ;param config: Which config to retrieve, defaults to running.
@@ -129,18 +130,25 @@ def write_to_excel(item_list, filename, preferred_header_order=None, headers_to_
     workbook.close()
 
 
-def main():
-    script_config = Config('config.yml')
-
-    # Retrieve both configurations from firewall
-    running_config = retrieve_firewall_configuration(script_config.firewall_hostname,
-                                                     script_config.firewall_api_key,
+def do_the_things(firewall, api_key):
+    """
+    This is the primary meat of the script. It takes a firewall and API key and writes out excel
+    sheets with the rulebase.
+    :param firewall: Firewall to query
+    :param api_key: API key to query
+    ;return:
+    """
+    # Retrieve both possible configurations from firewall
+    running_config = retrieve_firewall_configuration(firewall,
+                                                     api_key,
                                                      config='running')
-    pushed_config = retrieve_firewall_configuration(script_config.firewall_hostname,
-                                                    script_config.firewall_api_key,
+    pushed_config = retrieve_firewall_configuration(firewall,
+                                                    api_key,
                                                     config='pushed-shared-policy')
 
-    # Store objects from config in separate dictionaries
+    # Store objects from config in separate dictionaries.
+    # Use helper function to achieve.
+    # Safety First
     address = safeget(pushed_config, 'policy', 'panorama', 'address', 'entry')
     address_groups = safeget(pushed_config, 'policy', 'panorama', 'address-group', 'entry', )
     pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
@@ -149,10 +157,10 @@ def main():
                     + safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
                               'entry')
 
-    # Combine the pre, on-device, and post rule sets into a single view
+    # Combine the pre, on-device, and post rule sets into a single ordered view
     combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
 
-    # Finally write the information to excel files.
+    # Define headers we care about being ordered in the order they should be.
     rulebase_headers_order = ['@name',
                               'action',
                               'tag',
@@ -168,25 +176,45 @@ def main():
                               'application',
                               'service',
                               'profile-setting',
-                              'description']
-    # I'm removing fields to be printed based upon stupid stuff.
+                              'description'
+                              ]
+
+    # I'm removing excel columns that I don't want in output based upon stupid stuff.
     # Perhaps I don't care.
-    # Perhaps the fields just don't work correctly because PaloAlto refuses any consistency.
+    # Perhaps the fields just don't work correctly because PaloAlto output refuses any consistency.
     # Yeah I'm going to go with the latter option.
     rulebase_headers_remove = ['option',
                                'profile-setting',
                                'disabled',
                                'log-end',
                                'log-start',
-                               'category']
-    # Remember that consistency thing... yeah this is to populate the excel fields with known default mappings.
+                               'category'
+                               ]
+
+    # Remember that consistency thing...
+    # ... yeah this is to populate the excel fields with known default mappings.
+    # This is for fields I do need to be in output.
     rulebase_default_map = {'rule-type': 'universal',
                             'negate-source': 'no',
                             'negate-destination': 'no',
                             }
+
+    # Finally let's write the damn thing
     write_to_excel(combined_rulebase,
-                   '{}-combined-rules.xlsx'.format(script_config.firewall_hostname),
-                   rulebase_headers_order, rulebase_headers_remove, rulebase_default_map)
+                   '{}-combined-rules.xlsx'.format(firewall),
+                   rulebase_headers_order,
+                   rulebase_headers_remove,
+                   rulebase_default_map
+                   )
+
+    # I should print something to let user know it worked.
+    # Dharma says feedback is important for good coding.
+    print('{} processed. Please check directory for output files.'.format(firewall))
+
+def main():
+    script_config = Config('config.yml')
+    for firewall in script_config.firewall_hostnames:
+        do_the_things(firewall, script_config.firewall_api_key)
 
 
 if __name__ == '__main__':
