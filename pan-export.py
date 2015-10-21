@@ -12,7 +12,6 @@ class Config:
     def __init__(self, filename):
         with open(filename, 'r') as stream:
             config = yaml.load(stream)
-        self.firewall_hostname = config['firewall_hostname']
         self.firewall_api_key = config['firewall_api_key']
         self.firewall_hostnames = config['firewall_hostnames']
 
