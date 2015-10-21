@@ -45,7 +45,7 @@ def safeget(dct, *keys):
     return dct
 
 
-def get_headers(dict, preferred_header_order=None):
+def get_headers(dict, preferred_header_order=None, headers_to_remove=None):
     """
     Takes a nested dictionary and returns headers as a unique list. For PanOS the top level of each dictionary
     database is a entry "ID" field of value xxx. Which then contain additional attributes/keys with values.
@@ -57,12 +57,17 @@ def get_headers(dict, preferred_header_order=None):
     """
     if preferred_header_order is None:
         preferred_header_order = []
+    if headers_to_remove is None:
+        headers_to_remove = []
     scraped_headers = set()
     for item in dict:
         for header in item:
             scraped_headers.add(header)
 
     ordered_headers = []
+    for header in headers_to_remove:
+        if header in scraped_headers:
+            scraped_headers.remove(header)
     for header in preferred_header_order:
         if header in scraped_headers:
             ordered_headers.append(header)
@@ -71,9 +76,23 @@ def get_headers(dict, preferred_header_order=None):
     return ordered_headers
 
 
-def write_to_excel(item_list, filename, preferred_header_order=None):
+def check_default(object_to_check, default_key, default_map=None):
+    """
+    Takes a string_to_check, header, and a default_map table. If string is empty and there is
+    a default_key mapping returns default.
+    :param object_to_check: Python object to check against table, the object type must match the default_key ty
+    :param default_key:
+    :param default_map:
+    :return:
+    """
+    if object_to_check is '' and default_key in default_map.keys():
+        return default_map[default_key]
+    return object_to_check
+
+
+def write_to_excel(item_list, filename, preferred_header_order=None, headers_to_remove=None, default_map=None):
     # First get headers for excel sheet from helper function
-    headers = get_headers(item_list, preferred_header_order)
+    headers = get_headers(item_list, preferred_header_order, headers_to_remove)
     # Define workbook
     workbook = xlsxwriter.Workbook(filename)
     worksheet = workbook.add_worksheet()
@@ -94,7 +113,19 @@ def write_to_excel(item_list, filename, preferred_header_order=None):
             cell = item_list[i].get(header, '')
             if isinstance(cell, dict):
                 cell = cell.get('member', cell)
-            worksheet.write(excel_row, excel_col, str(cell))
+            if isinstance(cell, list):
+                combined_cell = ''
+                first_item = True
+                for item in cell:
+                    if first_item is True:
+                        combined_cell += item
+                        first_item = False
+                    else:
+                        combined_cell += ', {}'.format(item)
+                worksheet.write(excel_row, excel_col, combined_cell)
+            else:
+                safe_cell = check_default(str(cell), header, default_map)
+                worksheet.write(excel_row, excel_col, safe_cell)
     workbook.close()
 
 
@@ -122,25 +153,40 @@ def main():
     combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
 
     # Finally write the information to excel files.
-    rulebase_headers = ['@name',
-                        'action',
-                        'tag',
-                        'rule-type',
-                        'from',
-                        'source',
-                        'negate-source',
-                        'source-user',
-                        'hip-profiles',
-                        'to',
-                        'destination',
-                        'negate-destination',
-                        'application',
-                        'service',
-                        'profile-setting',
-                        'description']
+    rulebase_headers_order = ['@name',
+                              'action',
+                              'tag',
+                              'rule-type',
+                              'from',
+                              'source',
+                              'negate-source',
+                              'source-user',
+                              'hip-profiles',
+                              'to',
+                              'destination',
+                              'negate-destination',
+                              'application',
+                              'service',
+                              'profile-setting',
+                              'description']
+    # I'm removing fields to be printed based upon stupid stuff.
+    # Perhaps I don't care.
+    # Perhaps the fields just don't work correctly because PaloAlto refuses any consistency.
+    # Yeah I'm going to go with the latter option.
+    rulebase_headers_remove = ['option',
+                               'profile-setting',
+                               'disabled',
+                               'log-end',
+                               'log-start',
+                               'category']
+    # Remember that consistency thing... yeah this is to populate the excel fields with known default mappings.
+    rulebase_default_map = {'rule-type': 'universal',
+                            'negate-source': 'no',
+                            'negate-destination': 'no',
+                            }
     write_to_excel(combined_rulebase,
                    '{}-combined-rules.xlsx'.format(script_config.firewall_hostname),
-                   rulebase_headers)
+                   rulebase_headers_order, rulebase_headers_remove, rulebase_default_map)
 
 
 if __name__ == '__main__':
