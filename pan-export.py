@@ -52,10 +52,10 @@ def get_headers(data_dict, preferred_header_order=None, headers_to_remove=None):
     Takes a nested dictionary and returns headers as a unique list. For PanOS the top level of each dictionary
     database is a entry "ID" field of value xxx. Which then contain additional attributes/keys with values.
     :param data_dict: Dictionary in format correctly
-    :param preferred_header_order List of headers. If one or more headers in this list are found in the provided
+    :param preferred_header_order: List of headers. If one or more headers in this list are found in the provided
     dictionary, they will be returned in the same order they occur in this list. Headers found in the dict but not in
     this list will be sorted and appended to the end of the list.
-    :param headers_to_remove Collection of headers which will not appear in the returned list.
+    :param headers_to_remove: Collection of headers which will not appear in the returned list.
     :return: list of found headers, in an order approximately following the preferred order
     """
     if preferred_header_order is None:
