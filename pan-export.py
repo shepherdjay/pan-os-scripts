@@ -162,52 +162,56 @@ def do_the_things(firewall, api_key):
     combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
 
     # Define headers we care about being ordered in the order they should be.
-    rulebase_headers_order = ['@name',
-                              'action',
-                              'tag',
-                              'rule-type',
-                              'from',
-                              'source',
-                              'negate-source',
-                              'source-user',
-                              'hip-profiles',
-                              'to',
-                              'destination',
-                              'negate-destination',
-                              'application',
-                              'service',
-                              'profile-setting',
-                              'description'
-                              ]
+    rulebase_headers_order = [
+        '@name',
+        'action',
+        'tag',
+        'rule-type',
+        'from',
+        'source',
+        'negate-source',
+        'source-user',
+        'hip-profiles',
+        'to',
+        'destination',
+        'negate-destination',
+        'application',
+        'service',
+        'profile-setting',
+        'description'
+    ]
 
     # I'm removing excel columns that I don't want in output based upon stupid stuff.
     # Perhaps I don't care.
     # Perhaps the fields just don't work correctly because PaloAlto output refuses any consistency.
     # Yeah I'm going to go with the latter option.
-    rulebase_headers_remove = ['option',
-                               'profile-setting',
-                               'disabled',
-                               'log-end',
-                               'log-start',
-                               'category'
-                               ]
+    rulebase_headers_remove = [
+        'option',
+        'profile-setting',
+        'disabled',
+        'log-end',
+        'log-start',
+        'category'
+    ]
 
     # Remember that consistency thing...
     # ... yeah this is to populate the excel fields with known default mappings.
     # This is for fields I do need to be in output.
-    rulebase_default_map = {'rule-type': 'universal',
-                            'negate-source': 'no',
-                            'negate-destination': 'no',
-                            }
+    rulebase_default_map = {
+        'rule-type': 'universal',
+        'negate-source': 'no',
+        'negate-destination': 'no',
+    }
 
     # Finally let's write the damn thing
 
-    write_to_excel(combined_rulebase,
-                   get_filename(firewall),
-                   rulebase_headers_order,
-                   rulebase_headers_remove,
-                   rulebase_default_map
-                   )
+    write_to_excel(
+        combined_rulebase,
+        get_filename(firewall),
+        rulebase_headers_order,
+        rulebase_headers_remove,
+        rulebase_default_map
+    )
 
     # I should print something to let user know it worked.
     # Dharma says feedback is important for good coding.
