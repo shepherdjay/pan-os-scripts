@@ -201,28 +201,9 @@ def do_the_things(firewall, api_key):
                             }
 
     # Finally let's write the damn thing
-    current_time = datetime.datetime.now()
-    filename = (
-        "{year}-"
-        "{month}-"
-        "{day}-"
-        "{hour}{minute}{second}-"
-        "{firewall}-combined-rules"
-        ".xlxs"
-    )
-
-    filename = filename.format(
-        firewall=firewall,
-        year=pad_to_two_digits(current_time.year),
-        month=pad_to_two_digits(current_time.month),
-        day=pad_to_two_digits(current_time.day),
-        hour=pad_to_two_digits(current_time.hour),
-        minute=pad_to_two_digits(current_time.minute),
-        second=pad_to_two_digits(current_time.second)
-    )
 
     write_to_excel(combined_rulebase,
-                   filename,
+                   get_filename(firewall),
                    rulebase_headers_order,
                    rulebase_headers_remove,
                    rulebase_default_map
@@ -231,6 +212,31 @@ def do_the_things(firewall, api_key):
     # I should print something to let user know it worked.
     # Dharma says feedback is important for good coding.
     print('{} processed. Please check directory for output files.'.format(firewall))
+
+
+def get_filename(firewall):
+    """
+    Generate an excel spreadsheet filename from a firewall name and the current time.
+    :param firewall: firewall name
+    :return: A filename in the format YYYY-MM-DD-HHMMSS-{firewall}-combined-rules.xlsx
+    """
+    current_time = datetime.datetime.now()
+    return (
+        "{year}-"
+        "{month}-"
+        "{day}-"
+        "{hour}{minute}{second}-"
+        "{firewall}-combined-rules"
+        ".xlsx"
+    ).format(
+        firewall=firewall,
+        year=pad_to_two_digits(current_time.year),
+        month=pad_to_two_digits(current_time.month),
+        day=pad_to_two_digits(current_time.day),
+        hour=pad_to_two_digits(current_time.hour),
+        minute=pad_to_two_digits(current_time.minute),
+        second=pad_to_two_digits(current_time.second)
+    )
 
 
 def pad_to_two_digits(n):
