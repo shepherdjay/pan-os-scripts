@@ -6,6 +6,7 @@ import pan.xapi
 import yaml
 import xmltodict
 import xlsxwriter
+import datetime
 
 
 class Config:
@@ -46,14 +47,15 @@ def safeget(dct, *keys):
     return dct
 
 
-def get_headers(dict, preferred_header_order=None, headers_to_remove=None):
+def get_headers(data_dict, preferred_header_order=None, headers_to_remove=None):
     """
     Takes a nested dictionary and returns headers as a unique list. For PanOS the top level of each dictionary
     database is a entry "ID" field of value xxx. Which then contain additional attributes/keys with values.
-    :param dict: Dictionary in format correctly
-    :param preferred_header_order List of headers. If one or more headers in this list are found in the provided
-    dictionary, they will be returned in the same order they occur in this list. Headers found in the dict but not in this list
-    will be sorted and appended to the end of the list.
+    :param data_dict: Dictionary in format correctly
+    :param preferred_header_order: List of headers. If one or more headers in this list are found in the provided
+    dictionary, they will be returned in the same order they occur in this list. Headers found in the dict but not in
+    this list will be sorted and appended to the end of the list.
+    :param headers_to_remove: Collection of headers which will not appear in the returned list.
     :return: list of found headers, in an order approximately following the preferred order
     """
     if preferred_header_order is None:
@@ -61,14 +63,12 @@ def get_headers(dict, preferred_header_order=None, headers_to_remove=None):
     if headers_to_remove is None:
         headers_to_remove = []
     scraped_headers = set()
-    for item in dict:
+    for item in data_dict:
         for header in item:
             scraped_headers.add(header)
 
     ordered_headers = []
-    for header in headers_to_remove:
-        if header in scraped_headers:
-            scraped_headers.remove(header)
+    scraped_headers = scraped_headers.difference(set(headers_to_remove))
     for header in preferred_header_order:
         if header in scraped_headers:
             ordered_headers.append(header)
@@ -138,6 +138,7 @@ def do_the_things(firewall, api_key):
     :param api_key: API key to query
     ;return:
     """
+    # "Zhu Li, do the thing!"
     # Retrieve both possible configurations from firewall
     running_config = retrieve_firewall_configuration(firewall,
                                                      api_key,
@@ -161,55 +162,95 @@ def do_the_things(firewall, api_key):
     combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
 
     # Define headers we care about being ordered in the order they should be.
-    rulebase_headers_order = ['@name',
-                              'action',
-                              'tag',
-                              'rule-type',
-                              'from',
-                              'source',
-                              'negate-source',
-                              'source-user',
-                              'hip-profiles',
-                              'to',
-                              'destination',
-                              'negate-destination',
-                              'application',
-                              'service',
-                              'profile-setting',
-                              'description'
-                              ]
+    rulebase_headers_order = [
+        '@name',
+        'action',
+        'tag',
+        'rule-type',
+        'from',
+        'source',
+        'negate-source',
+        'source-user',
+        'hip-profiles',
+        'to',
+        'destination',
+        'negate-destination',
+        'application',
+        'service',
+        'profile-setting',
+        'description'
+    ]
 
     # I'm removing excel columns that I don't want in output based upon stupid stuff.
     # Perhaps I don't care.
     # Perhaps the fields just don't work correctly because PaloAlto output refuses any consistency.
     # Yeah I'm going to go with the latter option.
-    rulebase_headers_remove = ['option',
-                               'profile-setting',
-                               'disabled',
-                               'log-end',
-                               'log-start',
-                               'category'
-                               ]
+    rulebase_headers_remove = [
+        'option',
+        'profile-setting',
+        'disabled',
+        'log-end',
+        'log-start',
+        'category'
+    ]
 
     # Remember that consistency thing...
     # ... yeah this is to populate the excel fields with known default mappings.
     # This is for fields I do need to be in output.
-    rulebase_default_map = {'rule-type': 'universal',
-                            'negate-source': 'no',
-                            'negate-destination': 'no',
-                            }
+    rulebase_default_map = {
+        'rule-type': 'universal',
+        'negate-source': 'no',
+        'negate-destination': 'no',
+    }
 
     # Finally let's write the damn thing
-    write_to_excel(combined_rulebase,
-                   '{}-combined-rules.xlsx'.format(firewall),
-                   rulebase_headers_order,
-                   rulebase_headers_remove,
-                   rulebase_default_map
-                   )
+
+    write_to_excel(
+        combined_rulebase,
+        get_filename(firewall),
+        rulebase_headers_order,
+        rulebase_headers_remove,
+        rulebase_default_map
+    )
 
     # I should print something to let user know it worked.
     # Dharma says feedback is important for good coding.
     print('{} processed. Please check directory for output files.'.format(firewall))
+
+
+def get_filename(firewall):
+    """
+    Generate an excel spreadsheet filename from a firewall name and the current time.
+    :param firewall: firewall name
+    :return: A filename in the format YYYY-MM-DD-HHMMSS-{firewall}-combined-rules.xlsx
+    """
+    current_time = datetime.datetime.now()
+    return (
+        "{year}-"
+        "{month}-"
+        "{day}-"
+        "{hour}{minute}{second}-"
+        "{firewall}-combined-rules"
+        ".xlsx"
+    ).format(
+        firewall=firewall,
+        year=pad_to_two_digits(current_time.year),
+        month=pad_to_two_digits(current_time.month),
+        day=pad_to_two_digits(current_time.day),
+        hour=pad_to_two_digits(current_time.hour),
+        minute=pad_to_two_digits(current_time.minute),
+        second=pad_to_two_digits(current_time.second)
+    )
+
+
+def pad_to_two_digits(n):
+    """
+    Add leading zeros to format a number as at least two digits
+    :param n: any number
+    :return: The number as a string with at least two digits
+    """
+    return str(n).zfill(2)
+
 
 def main():
     script_config = Config('config.yml')
