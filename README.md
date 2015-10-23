@@ -15,8 +15,10 @@ pip install -r requirements.txt
 Copy `config.yml.example` to `config.yml` and configure the values:
 
 The following values are REQUIRED:
+
 - `firewall_hostnames`: List of firewall hostnames
 - `firewall_api_key`: Valid API key for your firewalls. See PaloAlto API Documentation for more information.
 
 The following values are OPTIONAL:
+
 - `top_domain`: Top level domain you would like stripped from filename output. If you would like the output as is leave this value blank.

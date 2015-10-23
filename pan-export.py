@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-__author__ = 'Jay Shepherd'
 
 # noinspection PyPackageRequirements
+import datetime
+
 import pan.xapi
+
 import yaml
 import xmltodict
 import xlsxwriter
-import datetime
+
+__author__ = 'Jay Shepherd'
 
 
 class Config:
@@ -131,7 +134,7 @@ def write_to_excel(item_list, filename, preferred_header_order=None, headers_to_
     workbook.close()
 
 
-def do_the_things(firewall, api_key, top_domain = ''):
+def do_the_things(firewall, api_key, top_domain=''):
     """
     This is the primary meat of the script. It takes a firewall and API key and writes out excel
     sheets with the rulebase.
