@@ -1,10 +1,12 @@
-## Panorama Firewall Scripts
+## PaloAlto Firewall Scripts
+
+### pan-export.py
 
 Script will take a list of firewalls specified in config.yml and pull the combined rulebase for each one.
 (This includes pre and post rules if using panorama in your organization)
 It will then output it into an excel spreadsheet.
 
-### Quick Start
+#### Quick Start
 
 Install depdendencies:
 
