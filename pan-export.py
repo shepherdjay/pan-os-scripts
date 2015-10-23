@@ -13,6 +13,7 @@ class Config:
     def __init__(self, filename):
         with open(filename, 'r') as stream:
             config = yaml.load(stream)
+        self.top_domain = config['top_domain']
         self.firewall_api_key = config['firewall_api_key']
         self.firewall_hostnames = config['firewall_hostnames']
 
@@ -130,7 +131,7 @@ def write_to_excel(item_list, filename, preferred_header_order=None, headers_to_
     workbook.close()
 
 
-def do_the_things(firewall, api_key):
+def do_the_things(firewall, api_key, top_domain = ''):
     """
     This is the primary meat of the script. It takes a firewall and API key and writes out excel
     sheets with the rulebase.
@@ -207,7 +208,7 @@ def do_the_things(firewall, api_key):
 
     write_to_excel(
         combined_rulebase,
-        get_filename(firewall),
+        get_filename(firewall.strip(top_domain)),
         rulebase_headers_order,
         rulebase_headers_remove,
         rulebase_default_map
@@ -229,7 +230,6 @@ def get_filename(firewall):
         "{year}-"
         "{month}-"
         "{day}-"
-        "{hour}{minute}{second}-"
         "{firewall}-combined-rules"
         ".xlsx"
     ).format(
@@ -237,9 +237,6 @@ def get_filename(firewall):
         year=pad_to_two_digits(current_time.year),
         month=pad_to_two_digits(current_time.month),
         day=pad_to_two_digits(current_time.day),
-        hour=pad_to_two_digits(current_time.hour),
-        minute=pad_to_two_digits(current_time.minute),
-        second=pad_to_two_digits(current_time.second)
     )
 
 
@@ -255,7 +252,7 @@ def pad_to_two_digits(n):
 def main():
     script_config = Config('config.yml')
     for firewall in script_config.firewall_hostnames:
-        do_the_things(firewall, script_config.firewall_api_key)
+        do_the_things(firewall, script_config.firewall_api_key, script_config.top_domain)
 
 
 if __name__ == '__main__':
