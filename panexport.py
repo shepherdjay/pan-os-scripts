@@ -34,6 +34,16 @@ def retrieve_firewall_configuration(hostname, api_key, config='running'):
     firewall.op(cmd=command, cmd_xml=True)
     return xmltodict.parse(firewall.xml_result())
 
+def combine_the_rulebase(pushed_config, running_config):
+    pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
+    device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase', 'entry')
+    post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry')
+    default_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
+                               'entry')
+    # Combine the pre, on-device, and post rule sets into a single ordered view
+    combined_rulebase = pre_rulebase + device_rulebase + post_rulebase + default_rulebase
+    return combined_rulebase
+
 
 def safeget(dct, *keys):
     """
@@ -157,18 +167,11 @@ def do_the_things(firewall, api_key, top_domain=''):
                                                     config='pushed-shared-policy')
 
     # Store objects from config in separate dictionaries.
-    # Use helper function to achieve.
+    # Use helper functions to achieve.
     # Safety First
     address = safeget(pushed_config, 'policy', 'panorama', 'address', 'entry')
-    address_groups = safeget(pushed_config, 'policy', 'panorama', 'address-group', 'entry', )
-    pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
-    device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase', 'entry')
-    post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry')
-    default_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
-                               'entry')
-
-    # Combine the pre, on-device, and post rule sets into a single ordered view
-    combined_rulebase = pre_rulebase + device_rulebase + post_rulebase + default_rulebase
+    address_groups = safeget(pushed_config, 'policy', 'panorama', 'address-group', 'entry')
+    combined_rulebase = combine_the_rulebase(pushed_config, running_config)
 
     # Define headers we care about being ordered in the order they should be.
     rulebase_headers_order = [
