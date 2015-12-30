@@ -4,10 +4,9 @@
 import datetime
 
 import pan.xapi
-
-import yaml
-import xmltodict
 import xlsxwriter
+import xmltodict
+import yaml
 
 __author__ = 'Jay Shepherd'
 
@@ -38,17 +37,23 @@ def retrieve_firewall_configuration(hostname, api_key, config='running'):
 
 def safeget(dct, *keys):
     """
-    Takes a dictionary and key path. Checks if key exists, if not returns empty list.
+    Takes a dictionary and key path. Checks if key exists and returns dictionary as list if not already, if not returns
+    empty list.
     :param dct: Dictionary to iterate over
     :param keys: Keys to iterate over
     :return: Returns dictionary with reference to key if exists, else returns empty list.
     """
+    dct_as_list = []
     for key in keys:
         try:
             dct = dct[key]
         except (KeyError, TypeError):
             return list()
-    return dct
+    if isinstance(dct, list):
+        return dct
+    else:
+        dct_as_list.append(dct)
+        return dct_as_list
 
 
 def get_headers(data_dict, preferred_header_order=None, headers_to_remove=None):
@@ -158,12 +163,12 @@ def do_the_things(firewall, api_key, top_domain=''):
     address_groups = safeget(pushed_config, 'policy', 'panorama', 'address-group', 'entry', )
     pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
     device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase', 'entry')
-    post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry') \
-                    + safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
-                              'entry')
+    post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry')
+    default_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
+                               'entry')
 
     # Combine the pre, on-device, and post rule sets into a single ordered view
-    combined_rulebase = pre_rulebase + device_rulebase + post_rulebase
+    combined_rulebase = pre_rulebase + device_rulebase + post_rulebase + default_rulebase
 
     # Define headers we care about being ordered in the order they should be.
     rulebase_headers_order = [
@@ -210,11 +215,11 @@ def do_the_things(firewall, api_key, top_domain=''):
     # Finally let's write the damn thing
 
     write_to_excel(
-        combined_rulebase,
-        get_filename(firewall.strip(top_domain)),
-        rulebase_headers_order,
-        rulebase_headers_remove,
-        rulebase_default_map
+            combined_rulebase,
+            get_filename(firewall.strip(top_domain)),
+            rulebase_headers_order,
+            rulebase_headers_remove,
+            rulebase_default_map
     )
 
     # I should print something to let user know it worked.
@@ -236,10 +241,10 @@ def get_filename(firewall):
         "{firewall}-combined-rules"
         ".xlsx"
     ).format(
-        firewall=firewall,
-        year=pad_to_two_digits(current_time.year),
-        month=pad_to_two_digits(current_time.month),
-        day=pad_to_two_digits(current_time.day),
+            firewall=firewall,
+            year=pad_to_two_digits(current_time.year),
+            month=pad_to_two_digits(current_time.month),
+            day=pad_to_two_digits(current_time.day),
     )
 
 
