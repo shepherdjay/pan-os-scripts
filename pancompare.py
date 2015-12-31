@@ -57,6 +57,12 @@ def convert_to_ipobject(string):
 
 
 def split_multiple_zones(string):
+    """
+    Takes a string of one or more panos zones and returns a set of zones discovered.
+    Compatible with multi-word zones such as "External DMZ"
+    :param string: A string of zone(s) in panos dataplane format, ex. '[ Zone1 "Zone 2" ]' or 'Zone1'
+    :return: Zones discovered as a set, ex. Set(['Zone1','Zone 2',])
+    """
     # Test string if multiple zones
     set_identifier_regex = re.compile(r'\[|\]')
     if set_identifier_regex.search(string):
@@ -74,13 +80,13 @@ def split_multiple_zones(string):
     # Now lets logic it
     # Easy
     if not multiple_zone and not multiple_word:
-        return string.split()
+        return set(string.split())
 
     # Medium
     elif multiple_zone and not multiple_word:
-        return set_identifier_regex.sub('', string).split()
+        return set(set_identifier_regex.sub('', string).split())
     elif not multiple_zone and multiple_word:
-        return multi_identifier_regex.sub('', string)
+        return set(multi_identifier_regex.sub('', string))
 
     # Hard
     elif multiple_word and multiple_zone:
@@ -91,7 +97,7 @@ def split_multiple_zones(string):
         string = multi_word_extract_regex.sub('', string)
         normal_list = set_identifier_regex.sub('', string).split()
         special_list = normal_list + special_list
-        return special_list
+        return set(special_list)
 
     # For Debug
     else:
