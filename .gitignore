@@ -2,3 +2,4 @@ config.yml
 .idea/
 *.iml
 *.xlsx
+*.txt
