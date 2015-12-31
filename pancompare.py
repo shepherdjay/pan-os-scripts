@@ -7,6 +7,7 @@ import re
 import netaddr
 import pan.xapi
 import yaml
+from panexport import retrieve_firewall_configuration, combine_the_rulebase
 
 
 class Config:
