@@ -3,3 +3,4 @@ config.yml
 *.iml
 *.xlsx
 *.txt
+!requirements.txt
