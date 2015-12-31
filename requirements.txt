@@ -3,3 +3,4 @@ xlwt
 PyYAML
 xmltodict
 xlsxwriter
+netaddr
