@@ -7,6 +7,7 @@ import re
 import netaddr
 import pan.xapi
 import yaml
+
 from panexport import retrieve_firewall_configuration, combine_the_rulebase
 
 
@@ -38,14 +39,26 @@ def retrieve_dataplane(hostname, api_key, debug=None):
         return test_result
 
 
+def hex_to_ipv6(string):
+    return ':'.join(string[i:i + 4] for i in range(0, len(string), 4))
+
+
 def convert_to_ipobject(string):
-    ip_range_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})-([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})')
-    ip_address_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3}(?:\/[0-9]+)*)')
+    ip_range_regex = re.compile(r'([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})-([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})')
+    ip_address_regex = re.compile(r'([0-9]{1,3}(?:\.[0-9]{1,3}){0,3}(?:\/[0-9]+)*)')
+    ip_hex_regex = re.compile(r'0x([0-9a-f]+)(\/\d+)')
     ipset = netaddr.IPSet()
     if string == 'any':
         ipset.add(netaddr.IPNetwork('0.0.0.0/0'))
     else:
-        # Look for Ranges first and remove from string.
+        # Look for Hexes first, convert them to form netaddr can understand
+        hex_addresses = ip_hex_regex.findall(string)
+        if len(hex_addresses) > 0:
+            for address in hex_addresses:
+                ipv6 = hex_to_ipv6(address[0]) + address[1]
+                ipset.add(ipv6)
+            string = ip_hex_regex.sub('', string)
+        # Look for Ranges second and remove from string.
         # This allows us to reduce complexity of the ip address regex.
         ip_ranges = ip_range_regex.findall(string)
         string = ip_range_regex.sub('', string)
@@ -54,7 +67,15 @@ def convert_to_ipobject(string):
             ipset.add(address)
         for range in ip_ranges:
             ipset.add(netaddr.IPRange(range[0], range[1]))
-    return ipset
+    # Finally before we return set we need to ensure everything in the set is in ipv6 notation compatible with ipv4
+    # We do this due to a bug when comparing IP against a set, issue #120 reported in netaddr
+    ipset_converted = netaddr.IPSet()
+    for ipobject in ipset:
+        if ipobject.version == 4:
+            ipset_converted.add(ipobject.ipv6(ipv4_compatible=True))
+        else:
+            ipset_converted.add(ipobject)
+    return ipset_converted
 
 
 def split_multiple_zones(string):
