@@ -3,3 +3,15 @@ firewall_hostnames:
   - firewall-1.example.com
   - firewall-2.example.com
 firewall_api_key: APIKEYGOESHERE
+
+rule_filter:
+  zones:
+    - DMZ
+  ip_addresses:
+    - 198.51.100.0/24
+    - 203.0.113.5/32
+  rule_names:
+    include:
+      - Global Blocklist IN
+    exclude:
+      - Super Secret Rule

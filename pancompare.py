@@ -17,6 +17,7 @@ class Config:
         self.top_domain = config['top_domain']
         self.firewall_api_key = config['firewall_api_key']
         self.firewall_hostnames = config['firewall_hostnames']
+        self.rule_filters = config['rule_filters']
 
 
 def retrieve_dataplane(hostname, api_key, debug=None):
