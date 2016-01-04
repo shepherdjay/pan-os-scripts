@@ -41,5 +41,8 @@ Under `rule_filter`:
   - `rule_names`: List of case-sensitive rules to be bypassed during filtering and either included or excluded in the final output. 
   This is in place to speed up the script when checking rules that contain a large numbers of entries (usually a third party dynamic blocklist)
   
-Currently each filter is stand-alone and follows an 'or' type logic. 
-It is quick and dirty for my use-case, may expand featureset in future as I have time unless Palo beats me to it first.
+Currently the zones filter is an and operation on the ip_addresses list with an implicit "any". 
+This means zones will only be returned if the rule exists in that zone and it is accompanied by an IP present in the filter or rule states "any".
+Similarly, if doing zone filtering we throw away rules that don't match the zone before checking ip.
+It's possible it will miss rules defined this way but those rules even if defined won't work on your firewall anyway.
+It is quick and dirty for my use-case, may expand feature in future as I have time unless Palo beats me to it first.
