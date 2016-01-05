@@ -7,6 +7,7 @@ import re
 import netaddr
 import pan.xapi
 import yaml
+
 from panexport import retrieve_firewall_configuration, combine_the_rulebase
 
 
@@ -39,26 +40,68 @@ def retrieve_dataplane(hostname, api_key, debug=None):
         return test_result
 
 
-def convert_to_ipobject(string):
-    ip_range_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})-([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})')
-    ip_address_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3}(?:\/[0-9]+)*)')
+def hex_to_ipv6(string):
+    return ':'.join(string[i:i + 4] for i in range(0, len(string), 4))
+
+
+def map_to_address(ip):
+    if '/' in ip:
+        return netaddr.IPNetwork(ip)
+    return netaddr.IPAddress(ip)
+
+
+def map_to_network(network):
+    return netaddr.IPNetwork(network)
+
+
+def range_to_set(rangelist):
     ipset = netaddr.IPSet()
-    if string == 'any':
-        ipset.add(netaddr.IPNetwork('::/0'))
-    else:
-        # Look for Ranges first and remove from string.
-        # This allows us to reduce complexity of the ip address regex.
-        ip_ranges = ip_range_regex.findall(string)
-        string = ip_range_regex.sub('', string)
-        ip_addresses = ip_address_regex.findall(string)
-        for address in ip_addresses:
-            ipset.add(address)
-        for range in ip_ranges:
-            ipset.add(netaddr.IPRange(range[0], range[1]))
+    for ip_range in rangelist:
+        ipset.add(netaddr.IPRange(ip_range[0], ip_range[1]))
     return ipset
 
 
+def convert_to_ipobject(string):
+    ip_range_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})-([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})')
+    ip_address_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3}(?:\/[0-9]+)*)')
+    ip_hex_regex = re.compile(r'0x([0-9a-f]+)(\/\d+)')
+
+    if string == 'any':
+        return netaddr.IPSet([netaddr.IPNetwork('::/0')])
+
+    # Look for Hexes first, convert them to form netaddr can understand
+    hex_addresses = ip_hex_regex.findall(string)
+    converted_hex_list = []
+    if len(hex_addresses) > 0:
+        for address in hex_addresses:
+            ipv6 = hex_to_ipv6(address[0]) + address[1]
+            converted_hex_list.append(ipv6)
+    iphex_objects = list(map(map_to_network, converted_hex_list))
+    string = ip_hex_regex.sub('', string)
+
+    # Look for Ranges second and remove from string, also convert them to range objects.
+    # This allows us to reduce complexity of the ip address regex.
+    # I'm not using a map like the other devices to due a bug in netaddr reported issue 121
+    ip_ranges = ip_range_regex.findall(string)
+    ipset_ranges = range_to_set(ip_ranges)
+    string = ip_range_regex.sub('', string)
+
+    # Find IPAddresses
+    ip_addresses = ip_address_regex.findall(string)
+    ip_address_objects = list(map(map_to_address, ip_addresses))
+
+    # Combine Both Sets
+    ipset_add_hex = netaddr.IPSet(ip_address_objects + iphex_objects)
+    return ipset_ranges | ipset_add_hex
+
+
 def split_multiple_zones(string):
+    """
+    Takes a string of one or more panos zones and returns a set of zones discovered.
+    Compatible with multi-word zones such as "External DMZ"
+    :param string: A string of zone(s) in panos dataplane format, ex. '[ Zone1 "Zone 2" ]' or 'Zone1'
+    :return: Zones discovered as a set, ex. Set(['Zone1','Zone 2',])
+    """
     # Test string if multiple zones
     set_identifier_regex = re.compile(r'\[|\]')
     if set_identifier_regex.search(string):
@@ -148,7 +191,6 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
             parameters = dict(parameters_regex.findall(rule[1]))
             dataplane_rules.update({rule_name: parameters})
 
-
     # Iterate over the zones in each rule to split out multiple zones specified.
     # The iteration/filtering of zones is performed first and separate from ip objects so that
     # we can populate zone filtering matches first. It makes code more complex but saves
@@ -185,6 +227,7 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
         for parameter, value in dataplane_rules[rule].items():
             if parameter in ['source', 'destination']:
                 dataplane_rules[rule][parameter] = convert_to_ipobject(value)
+
 
 def main():
     script_config = Config('config.yml')
