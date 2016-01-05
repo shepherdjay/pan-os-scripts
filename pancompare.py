@@ -154,7 +154,7 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
     combined_rulebase = combine_the_rulebase(pushed_config, running_config)
 
     # Retrieve the raw dataplane info, debug option allows passing a text file instead to reduce API Calls.
-    dataplane_raw = retrieve_dataplane(firewall, api_key, 1)
+    dataplane_raw = retrieve_dataplane(firewall, api_key)
 
     # Define Regex Matches
     dataplane_regex = re.compile('DP dp0:\n\n(.+)\n\nDP dp1:', re.DOTALL)
@@ -227,7 +227,6 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
         for parameter, value in dataplane_rules[rule].items():
             if parameter in ['source', 'destination']:
                 dataplane_rules[rule][parameter] = convert_to_ipobject(value)
-    print("Hello")
 
 
 def main():
