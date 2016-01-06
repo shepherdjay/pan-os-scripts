@@ -21,7 +21,7 @@ class Config:
         self.rule_filters = config['rule_filters']
 
 
-def retrieve_dataplane(hostname, api_key, debug=None):
+def retrieve_dataplane(hostname, api_key):
     """
     This takes the FQDN of the firewall and retrieves the dataplane information.
     :param hostname: Hostname (FQDN) of firewall to retrieve information from
