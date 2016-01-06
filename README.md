@@ -29,7 +29,7 @@ The following values in `config.yml` are OPTIONAL for this script:
 
 ### pan-compare.py
 
-Script will compare the running dataplane ruleset to a list of custom filters and export in the same manner as pan-export.
+Script will compare the running dataplane ruleset to a list of custom filters and prints out as a list.
 This allows your organization to get rules associated with dynamic objects or dns names according to their actual value.
 
 The following values in `config.yml` are OPTIONAL for this script:
