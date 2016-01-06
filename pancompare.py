@@ -21,7 +21,7 @@ class Config:
         self.rule_filters = config['rule_filters']
 
 
-def retrieve_dataplane(hostname, api_key, debug=None):
+def retrieve_dataplane(hostname, api_key):
     """
     This takes the FQDN of the firewall and retrieves the dataplane information.
     :param hostname: Hostname (FQDN) of firewall to retrieve information from
@@ -220,6 +220,12 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
         del dataplane_rules[rule][parameter]
     for rule in cleanup_list:
         del dataplane_rules[rule]
+    cleanup_param = set()
+    cleanup_list = set()
+
+    # Convert filters to netaddr/network objects
+    network_filter = list(map(map_to_network, filters['ip_addresses']))
+    ipset_filter = netaddr.IPSet(network_filter)
 
     # Now that the "easy" rules have been matched we need to iterate over each source/destination
     # turn it into an IP Object for further testing. This is the long part of the script
@@ -227,6 +233,19 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
         for parameter, value in dataplane_rules[rule].items():
             if parameter in ['source', 'destination']:
                 dataplane_rules[rule][parameter] = convert_to_ipobject(value)
+                if ipset_filter & dataplane_rules[rule][parameter]:
+                    matched_rulelist.add(rule)
+                    break
+                else:
+                    cleanup_list.add(rule)
+
+    for rule in cleanup_list:
+        del dataplane_rules[rule]
+
+    print(firewall)
+    for rule in matched_rulelist:
+        print(rule)
+    print('\n')
 
 
 def main():
