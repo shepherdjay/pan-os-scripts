@@ -243,7 +243,9 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
         del dataplane_rules[rule]
 
     print(firewall)
-    print(matched_rulelist)
+    for rule in matched_rulelist:
+        print(rule)
+    print('\n')
 
 
 def main():
