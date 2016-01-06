@@ -26,35 +26,40 @@ def retrieve_dataplane(hostname, api_key):
     This takes the FQDN of the firewall and retrieves the dataplane information.
     :param hostname: Hostname (FQDN) of firewall to retrieve information from
     :param api_key:  API key to access firewall configuration
-    :param debug: True/False value to determine if debugging mode.
     :return: Dictionary containing dataplane or test unit if Debug is True
     """
-    if debug is None:
-        firewall = pan.xapi.PanXapi(hostname=hostname, api_key=api_key)
-        command = "show running security-policy"
-        firewall.op(cmd=command, cmd_xml=True)
-        return firewall.xml_result()
-    else:
-        with open("dataplane_result_test.txt", "r") as test_file:
-            test_result = test_file.read()
-        return test_result
+    firewall = pan.xapi.PanXapi(hostname=hostname, api_key=api_key)
+    command = "show running security-policy"
+    firewall.op(cmd=command, cmd_xml=True)
+    return firewall.xml_result()
 
 
-def hex_to_ipv6(string):
-    return ':'.join(string[i:i + 4] for i in range(0, len(string), 4))
+
+def hex_to_ipv6(hex):
+    """
+    Takes a 128 bit hexidecimal string and returns that string formatted for IPv6
+    :param hex: Any 128 bit hexidecimal passed as string
+    :return: String formatted in IPv6
+    """
+    return ':'.join(hex[i:i + 4] for i in range(0, len(hex), 4))
 
 
 def map_to_address(ip):
+    """
+    Takes an ip address as string and turns into netaddr object.
+    :param ip: IP Address or Network as string.
+    :return: netaddr IPAddress or IPNetwork object
+    """
     if '/' in ip:
         return netaddr.IPNetwork(ip)
     return netaddr.IPAddress(ip)
 
-
-def map_to_network(network):
-    return netaddr.IPNetwork(network)
-
-
 def range_to_set(rangelist):
+    """
+    Takes a nested list of ip ranges and converts to a netaddr IPSet object.
+    :param rangelist: A nested list of ip ranges expressed as strings
+    :return: netaddr IPSet
+    """
     ipset = netaddr.IPSet()
     for ip_range in rangelist:
         ipset.add(netaddr.IPRange(ip_range[0], ip_range[1]))
@@ -62,6 +67,12 @@ def range_to_set(rangelist):
 
 
 def convert_to_ipobject(string):
+    """
+    Takes a large single string of mixed IP Address types and returns a netaddr.IPSet
+    Utilizes several helper and map functions to complete.
+    :param string: A string of ip addresses, networks, ranges, hex values.
+    :return: An IPSet of extracted IPs
+    """
     ip_range_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})-([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})')
     ip_address_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3}(?:\/[0-9]+)*)')
     ip_hex_regex = re.compile(r'0x([0-9a-f]+)(\/\d+)')
@@ -76,7 +87,7 @@ def convert_to_ipobject(string):
         for address in hex_addresses:
             ipv6 = hex_to_ipv6(address[0]) + address[1]
             converted_hex_list.append(ipv6)
-    iphex_objects = list(map(map_to_network, converted_hex_list))
+    iphex_objects = list(map(map_to_address, converted_hex_list))
     string = ip_hex_regex.sub('', string)
 
     # Look for Ranges second and remove from string, also convert them to range objects.
@@ -224,7 +235,7 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
     cleanup_list = set()
 
     # Convert filters to netaddr/network objects
-    network_filter = list(map(map_to_network, filters['ip_addresses']))
+    network_filter = list(map(map_to_address, filters['ip_addresses']))
     ipset_filter = netaddr.IPSet(network_filter)
 
     # Now that the "easy" rules have been matched we need to iterate over each source/destination
