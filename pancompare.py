@@ -8,8 +8,6 @@ import netaddr
 import pan.xapi
 import yaml
 
-from panexport import retrieve_firewall_configuration, combine_the_rulebase
-
 
 class Config:
     def __init__(self, filename):
@@ -50,8 +48,8 @@ def map_to_address(ip):
     :return: netaddr IPAddress or IPNetwork object
     """
     if '/' in ip:
-        return netaddr.IPNetwork(ip)
-    return netaddr.IPAddress(ip)
+        return netaddr.IPNetwork(ip).ipv6(True)
+    return netaddr.IPAddress(ip).ipv6(True)
 
 
 def range_to_set(rangelist):
@@ -162,29 +160,25 @@ def filter_the_things(rule, subkeylist, filterlist):
     :param filterlist: Filterlist
     :return: Matching rules as set
     """
-    filters = set(filterlist)
-    values = set()
-    for subkey in subkeylist:
-        if isinstance(rule[1][subkey], list):
+    if isinstance(filterlist, netaddr.IPSet):
+        filters = filterlist
+        values = netaddr.IPSet()
+        for subkey in subkeylist:
             values.update(rule[1][subkey])
-        else:
-            values.add(rule[1][subkey])
+    else:
+        filters = set(filterlist)
+        values = set()
+        for subkey in subkeylist:
+            if isinstance(rule[1][subkey], list):
+                values.update(rule[1][subkey])
+            else:
+                values.add(rule[1][subkey])
     if filters & values:
         return rule[0]
     return None
 
 
-
 def compare_dataplane_to_rules(firewall, api_key, filters):
-    # Use previous work in panexport to retrieve configuration and combined rulebase
-    running_config = retrieve_firewall_configuration(firewall,
-                                                     api_key,
-                                                     config='running')
-    pushed_config = retrieve_firewall_configuration(firewall,
-                                                    api_key,
-                                                    config='pushed-shared-policy')
-    combined_rulebase = combine_the_rulebase(pushed_config, running_config)
-
     # Retrieve the raw dataplane info, debug option allows passing a text file instead to reduce API Calls.
     dataplane_raw = retrieve_dataplane(firewall, api_key)
 
@@ -211,19 +205,20 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
     dataplane_rules = {}
 
     # Iterate over the raw_rules to tease out the parameters and store
-    # We will also drop any rules in the hard filter list at this time to speed up additional processing
-    matched_rulelist_hard = set()
+    # We will also drop any rules in the hard filter list at this time
+    matched_rulelist_static = set()
     for rule in raw_rules:
         rule_name = rule[0]
         if rule_name in filters['rule_names']['include']:
-            matched_rulelist_hard.add(rule_name)
+            matched_rulelist_static.add(rule_name)
         elif rule_name in filters['rule_names']['exclude']:
             continue
         else:
             parameters = dict(parameters_regex.findall(rule[1]))
             dataplane_rules.update({rule_name: parameters})
 
-    # Iterate over the zones in each rule to split out multiple zones specified
+    # Iterate over the filterable parameters in each rule to split out into objects we can work with.
+    # This includes a list or string of zones and netaddr ip objects for IPs
     for rule in dataplane_rules:
         dataplane_rules[rule]['from'] = split_multiple_zones(dataplane_rules[rule]['from'])
         dataplane_rules[rule]['to'] = split_multiple_zones(dataplane_rules[rule]['to'])
@@ -236,51 +231,22 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
         if zone_result is not None:
             matched_rulelist_zone.add(zone_result)
 
-    # for rule in dataplane_rules:
-        # for parameter, value in dataplane_rules[rule].items():
-        #     if parameter in ['from', 'to']:
-                # dataplane_rules[rule][parameter] = split_multiple_zones(value)
-                # for zone in dataplane_rules[rule][parameter]:
-                #     if zone in filters['zones']:
-            #             if (parameter == 'from') and (dataplane_rules[rule]['source'] == 'any'):
-            #                 matched_rulelist.add(rule)
-            #                 cleanup_list.add(rule)
-            #             elif (parameter == 'to') and (dataplane_rules[rule]['destination'] == 'any'):
-            #                 matched_rulelist.add(rule)
-            #                 cleanup_list.add(rule)
-            # # While here lets cleanup parameters we aren't filtering on
-            # elif parameter not in ['source', 'destination']:
-            #     cleanup_param.add((rule, parameter))
-
-    # Cleanup after zone processing.
-    for rule, parameter in cleanup_param:
-        del dataplane_rules[rule][parameter]
-    for rule in cleanup_list:
-        del dataplane_rules[rule]
-    cleanup_param = set()
-    cleanup_list = set()
-
     # Convert filters to netaddr/network objects
     network_filter = list(map(map_to_address, filters['ip_addresses']))
     ipset_filter = netaddr.IPSet(network_filter)
 
-    # Now that the "easy" rules have been matched we need to iterate over each source/destination
-    # turn it into an IP Object for further testing. This is the long part of the script
-    for rule in dataplane_rules:
-        for parameter, value in dataplane_rules[rule].items():
-            if parameter in ['source', 'destination']:
-                dataplane_rules[rule][parameter] = convert_to_ipobject(value)
-                if ipset_filter & dataplane_rules[rule][parameter]:
-                    matched_rulelist_hard.add(rule)
-                    break
-                else:
-                    cleanup_list.add(rule)
+    # Now that the zone rules have been matched we need to iterate over the ip objects.
+    matched_rulelist_address = set()
+    for rule in dataplane_rules.items():
+        address_result = filter_the_things(rule, ['source', 'destination'], ipset_filter)
+        if address_result is not None:
+            matched_rulelist_address.add(address_result)
 
-    for rule in cleanup_list:
-        del dataplane_rules[rule]
+    completed_filter = matched_rulelist_address.intersection(matched_rulelist_zone)
+    completed_filter.update(matched_rulelist_static)
 
     print(firewall)
-    for rule in matched_rulelist_hard:
+    for rule in completed_filter:
         print(rule)
     print('\n')
 
