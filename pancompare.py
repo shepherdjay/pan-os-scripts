@@ -8,8 +8,6 @@ import netaddr
 import pan.xapi
 import yaml
 
-from panexport import retrieve_firewall_configuration, combine_the_rulebase
-
 
 class Config:
     def __init__(self, filename):
@@ -34,7 +32,6 @@ def retrieve_dataplane(hostname, api_key):
     return firewall.xml_result()
 
 
-
 def hex_to_ipv6(hex):
     """
     Takes a 128 bit hexidecimal string and returns that string formatted for IPv6
@@ -51,8 +48,9 @@ def map_to_address(ip):
     :return: netaddr IPAddress or IPNetwork object
     """
     if '/' in ip:
-        return netaddr.IPNetwork(ip)
-    return netaddr.IPAddress(ip)
+        return netaddr.IPNetwork(ip).ipv6(True)
+    return netaddr.IPAddress(ip).ipv6(True)
+
 
 def range_to_set(rangelist):
     """
@@ -106,23 +104,23 @@ def convert_to_ipobject(string):
     return ipset_ranges | ipset_add_hex
 
 
-def split_multiple_zones(string):
+def split_multiple_zones(zone_string):
     """
     Takes a string of one or more panos zones and returns a set of zones discovered.
     Compatible with multi-word zones such as "External DMZ"
-    :param string: A string of zone(s) in panos dataplane format, ex. '[ Zone1 "Zone 2" ]' or 'Zone1'
+    :param zone_string: A string of zone(s) in panos dataplane format, ex. '[ Zone1 "Zone 2" ]' or 'Zone1'
     :return: Zones discovered as a set, ex. Set(['Zone1','Zone 2',])
     """
     # Test string if multiple zones
     set_identifier_regex = re.compile(r'\[|\]')
-    if set_identifier_regex.search(string):
+    if set_identifier_regex.search(zone_string):
         multiple_zone = True
     else:
         multiple_zone = False
 
     # Test if multi-word zone
     multi_identifier_regex = re.compile(r'\"')
-    if multi_identifier_regex.search(string):
+    if multi_identifier_regex.search(zone_string):
         multiple_word = True
     else:
         multiple_word = False
@@ -130,22 +128,22 @@ def split_multiple_zones(string):
     # Now lets logic it
     # Easy
     if not multiple_zone and not multiple_word:
-        return string.split()
+        return zone_string.split()
 
     # Medium
     elif multiple_zone and not multiple_word:
-        return set_identifier_regex.sub('', string).split()
+        return set_identifier_regex.sub('', zone_string).split()
     elif not multiple_zone and multiple_word:
-        return multi_identifier_regex.sub('', string)
+        return multi_identifier_regex.sub('', zone_string)
 
     # Hard
     elif multiple_word and multiple_zone:
         multi_word_extract_regex = re.compile('(".+?")')
-        special_list = multi_word_extract_regex.findall(string)
+        special_list = multi_word_extract_regex.findall(zone_string)
         for index, zone in enumerate(special_list):
             special_list[index] = multi_identifier_regex.sub('', zone)
-        string = multi_word_extract_regex.sub('', string)
-        normal_list = set_identifier_regex.sub('', string).split()
+        zone_string = multi_word_extract_regex.sub('', zone_string)
+        normal_list = set_identifier_regex.sub('', zone_string).split()
         special_list = normal_list + special_list
         return special_list
 
@@ -154,16 +152,33 @@ def split_multiple_zones(string):
         print("You Screwed Up")
 
 
-def compare_dataplane_to_rules(firewall, api_key, filters):
-    # Use previous work in panexport to retrieve configuration and combined rulebase
-    running_config = retrieve_firewall_configuration(firewall,
-                                                     api_key,
-                                                     config='running')
-    pushed_config = retrieve_firewall_configuration(firewall,
-                                                    api_key,
-                                                    config='pushed-shared-policy')
-    combined_rulebase = combine_the_rulebase(pushed_config, running_config)
+def filter_the_things(rule, subkeylist, filterlist):
+    """
+    Takes a rule dictionary and checks parameters against a subkeylist and filterlist.
+    :param rule: Rule as dictionary
+    :param subkeylist: List of subkeys or parameters to check.
+    :param filterlist: Filterlist
+    :return: Matching rules as set
+    """
+    if isinstance(filterlist, netaddr.IPSet):
+        filters = filterlist
+        values = netaddr.IPSet()
+        for subkey in subkeylist:
+            values.update(rule[1][subkey])
+    else:
+        filters = set(filterlist)
+        values = set()
+        for subkey in subkeylist:
+            if isinstance(rule[1][subkey], list):
+                values.update(rule[1][subkey])
+            else:
+                values.add(rule[1][subkey])
+    if filters & values:
+        return rule[0]
+    return None
 
+
+def compare_dataplane_to_rules(firewall, api_key, filters):
     # Retrieve the raw dataplane info, debug option allows passing a text file instead to reduce API Calls.
     dataplane_raw = retrieve_dataplane(firewall, api_key)
 
@@ -190,71 +205,48 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
     dataplane_rules = {}
 
     # Iterate over the raw_rules to tease out the parameters and store
-    # We will also drop any rules in the hard filter list at this time to speed up additional processing
-    matched_rulelist = set()
+    # We will also drop any rules in the hard filter list at this time
+    matched_rulelist_static = set()
     for rule in raw_rules:
         rule_name = rule[0]
         if rule_name in filters['rule_names']['include']:
-            matched_rulelist.add(rule_name)
+            matched_rulelist_static.add(rule_name)
         elif rule_name in filters['rule_names']['exclude']:
             continue
         else:
             parameters = dict(parameters_regex.findall(rule[1]))
             dataplane_rules.update({rule_name: parameters})
 
-    # Iterate over the zones in each rule to split out multiple zones specified.
-    # The iteration/filtering of zones is performed first and separate from ip objects so that
-    # we can populate zone filtering matches first. It makes code more complex but saves
-    # drastically on time not converting ips on rules that we know match.
-    # To avoid runtime errors we actually iterate over a copy of the dictionary.
-    cleanup_list = set()
-    cleanup_param = set()
-
+    # Iterate over the filterable parameters in each rule to split out into objects we can work with.
+    # This includes a list or string of zones and netaddr ip objects for IPs
     for rule in dataplane_rules:
-        for parameter, value in dataplane_rules[rule].items():
-            if parameter in ['from', 'to']:
-                dataplane_rules[rule][parameter] = split_multiple_zones(value)
-                for zone in dataplane_rules[rule][parameter]:
-                    if zone in filters['zones']:
-                        if (parameter == 'from') and (dataplane_rules[rule]['source'] == 'any'):
-                            matched_rulelist.add(rule)
-                            cleanup_list.add(rule)
-                        elif (parameter == 'to') and (dataplane_rules[rule]['destination'] == 'any'):
-                            matched_rulelist.add(rule)
-                            cleanup_list.add(rule)
-            # While here lets cleanup parameters we aren't filtering on
-            elif parameter not in ['source', 'destination']:
-                cleanup_param.add((rule, parameter))
+        dataplane_rules[rule]['from'] = split_multiple_zones(dataplane_rules[rule]['from'])
+        dataplane_rules[rule]['to'] = split_multiple_zones(dataplane_rules[rule]['to'])
+        dataplane_rules[rule]['source'] = convert_to_ipobject(dataplane_rules[rule]['source'])
+        dataplane_rules[rule]['destination'] = convert_to_ipobject(dataplane_rules[rule]['destination'])
 
-    # Cleanup after zone processing.
-    for rule, parameter in cleanup_param:
-        del dataplane_rules[rule][parameter]
-    for rule in cleanup_list:
-        del dataplane_rules[rule]
-    cleanup_param = set()
-    cleanup_list = set()
+    matched_rulelist_zone = set()
+    for rule in dataplane_rules.items():
+        zone_result = filter_the_things(rule, ['from', 'to'], filters['zones'])
+        if zone_result is not None:
+            matched_rulelist_zone.add(zone_result)
 
     # Convert filters to netaddr/network objects
     network_filter = list(map(map_to_address, filters['ip_addresses']))
     ipset_filter = netaddr.IPSet(network_filter)
 
-    # Now that the "easy" rules have been matched we need to iterate over each source/destination
-    # turn it into an IP Object for further testing. This is the long part of the script
-    for rule in dataplane_rules:
-        for parameter, value in dataplane_rules[rule].items():
-            if parameter in ['source', 'destination']:
-                dataplane_rules[rule][parameter] = convert_to_ipobject(value)
-                if ipset_filter & dataplane_rules[rule][parameter]:
-                    matched_rulelist.add(rule)
-                    break
-                else:
-                    cleanup_list.add(rule)
+    # Now that the zone rules have been matched we need to iterate over the ip objects.
+    matched_rulelist_address = set()
+    for rule in dataplane_rules.items():
+        address_result = filter_the_things(rule, ['source', 'destination'], ipset_filter)
+        if address_result is not None:
+            matched_rulelist_address.add(address_result)
 
-    for rule in cleanup_list:
-        del dataplane_rules[rule]
+    completed_filter = matched_rulelist_address.intersection(matched_rulelist_zone)
+    completed_filter.update(matched_rulelist_static)
 
     print(firewall)
-    for rule in matched_rulelist:
+    for rule in completed_filter:
         print(rule)
     print('\n')
 
