@@ -222,24 +222,35 @@ def filter_dataplane_rules(dataplane_raw, filters):
         dataplane_rules[rule]['source'] = convert_to_ipobject(dataplane_rules[rule]['source'])
         dataplane_rules[rule]['destination'] = convert_to_ipobject(dataplane_rules[rule]['destination'])
 
-    matched_rulelist_zone = set()
+    matched_source_zone = set()
+    matched_destination_zone = set()
     for rule in dataplane_rules.items():
-        zone_result = filter_the_things(rule, ['from', 'to'], filters['zones'])
-        if zone_result is not None:
-            matched_rulelist_zone.add(zone_result)
+        source_zone_result = filter_the_things(rule, ['from'], filters['zones'])
+        destination_zone_result = filter_the_things(rule, ['to'], filters['zones'])
+        if source_zone_result is not None:
+            matched_source_zone.add(source_zone_result)
+        if destination_zone_result is not None:
+            matched_destination_zone.add(destination_zone_result)
 
     # Convert filters to netaddr/network objects
     network_filter = list(map(map_to_address, filters['ip_addresses']))
     ipset_filter = netaddr.IPSet(network_filter)
 
     # Now that the zone rules have been matched we need to iterate over the ip objects.
-    matched_rulelist_address = set()
+    matched_rulelist_source = set()
+    matched_rulelist_destination = set()
     for rule in dataplane_rules.items():
-        address_result = filter_the_things(rule, ['source', 'destination'], ipset_filter)
-        if address_result is not None:
-            matched_rulelist_address.add(address_result)
+        source_address_result = filter_the_things(rule, ['source'], ipset_filter)
+        destination_address_result = filter_the_things(rule, ['destination'], ipset_filter)
+        if source_address_result is not None:
+            matched_rulelist_source.add(source_address_result)
+        if destination_address_result is not None:
+            matched_rulelist_destination.add(destination_address_result)
 
-    completed_filter = matched_rulelist_address.intersection(matched_rulelist_zone)
+    source_filter = matched_rulelist_source.intersection(matched_source_zone)
+    destination_filter = matched_rulelist_destination.intersection(matched_destination_zone)
+
+    completed_filter = source_filter | destination_filter
     completed_filter.update(matched_rulelist_static)
     return completed_filter
 
