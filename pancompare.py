@@ -178,11 +178,8 @@ def filter_the_things(rule, subkeylist, filterlist):
     return None
 
 
-def compare_dataplane_to_rules(firewall, api_key, filters):
-    # Retrieve the raw dataplane info, debug option allows passing a text file instead to reduce API Calls.
-    dataplane_raw = retrieve_dataplane(firewall, api_key)
-
-    # Define Regex Matches
+def filter_dataplane_rules(dataplane_raw, filters):
+     # Define Regex Matches
     dataplane_regex = re.compile('DP dp0:\n\n(.+)\n\nDP dp1:', re.DOTALL)
     find_rules_regex = re.compile(r"""
         "(.+?)"     # Find Rule Name
@@ -244,7 +241,9 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
 
     completed_filter = matched_rulelist_address.intersection(matched_rulelist_zone)
     completed_filter.update(matched_rulelist_static)
+    return completed_filter
 
+def print_out(firewall,completed_filter):
     print(firewall)
     for rule in completed_filter:
         print(rule)
@@ -254,7 +253,9 @@ def compare_dataplane_to_rules(firewall, api_key, filters):
 def main():
     script_config = Config('config.yml')
     for firewall in script_config.firewall_hostnames:
-        compare_dataplane_to_rules(firewall, script_config.firewall_api_key, script_config.rule_filters)
+        dataplane_raw = retrieve_dataplane(firewall, script_config.firewall_api_key)
+        completed_filter = filter_dataplane_rules(dataplane_raw, script_config.rule_filters)
+        print_out(firewall, completed_filter)
 
 
 if __name__ == '__main__':
