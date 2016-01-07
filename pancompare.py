@@ -179,7 +179,7 @@ def filter_the_things(rule, subkeylist, filterlist):
 
 
 def filter_dataplane_rules(dataplane_raw, filters):
-     # Define Regex Matches
+    # Define Regex Matches
     dataplane_regex = re.compile('DP dp0:\n\n(.+)\n\nDP dp1:', re.DOTALL)
     find_rules_regex = re.compile(r"""
         "(.+?)"     # Find Rule Name
@@ -254,7 +254,8 @@ def filter_dataplane_rules(dataplane_raw, filters):
     completed_filter.update(matched_rulelist_static)
     return completed_filter
 
-def print_out(firewall,completed_filter):
+
+def print_out(firewall, completed_filter):
     print(firewall)
     for rule in completed_filter:
         print(rule)
