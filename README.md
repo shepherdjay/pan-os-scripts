@@ -29,7 +29,9 @@ The following values in `config.yml` are OPTIONAL for this script:
 
 ### pan-compare.py
 
-Script will compare the running dataplane ruleset to a list of custom filters and export in the same manner as pan-export.
+Currently DOESN'T Support NEGATE Rules
+
+Script will compare the running dataplane ruleset to a list of custom filters and prints out as a list.
 This allows your organization to get rules associated with dynamic objects or dns names according to their actual value.
 
 The following values in `config.yml` are OPTIONAL for this script:
@@ -43,6 +45,9 @@ Under `rule_filter`:
   
 Currently the zones filter is an and operation on the ip_addresses list with an implicit "any". 
 This means zones will only be returned if the rule exists in that zone and it is accompanied by an IP present in the filter or rule states "any".
-Similarly, if doing zone filtering we throw away rules that don't match the zone before checking ip.
-It's possible it will miss rules defined this way but those rules even if defined won't work on your firewall anyway.
+
+###### OPERATION DOESN'T CURRENTLY SUPPORT NEGATE RULES
+Meaning the filter will catch rules that negate your filters and exclude rules that should be in your filters.
+This is work in progress
+
 It is quick and dirty for my use-case, may expand feature in future as I have time unless Palo beats me to it first.
