@@ -10,8 +10,8 @@ class PancompareTests(TestCase):
 
     def test_dataplane_no_match(self):
         """
-        This test itterates through the dataplane no match file which should contain no rules that match the
-        included filters test.
+        This test processes the dataplane no match file which should contain no rules that match the
+        included filters test file.
         :return:
         """
         script_config = pancompare.Config('testfiles/filters_test.yml')
