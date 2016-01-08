@@ -1,0 +1,14 @@
+top_domain: example.com
+firewall_hostnames:
+  - firewall-1.example.com
+  - firewall-2.example.com
+firewall_api_key: APIKEYGOESHERE
+
+rule_filters:
+  zones:
+    - DMZ
+  ip_addresses:
+    - 192.168.0.0/16
+  rule_names:
+    include: CaSe-Sensative
+    exclude: case-insense

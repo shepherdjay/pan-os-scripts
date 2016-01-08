@@ -1,6 +1,3 @@
 config.yml
 .idea/
-testfiles/**
 *.xlsx
-*.txt
-!requirements.txt
