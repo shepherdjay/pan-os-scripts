@@ -9,7 +9,7 @@ install:
   - pip install -r requirements-tests.txt
 
  #command to run tests
-script: py.test --cov
+script: py.test --cov tests/
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
