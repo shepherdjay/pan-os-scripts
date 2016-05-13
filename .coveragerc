@@ -1,0 +1,6 @@
+[run]
+branch = True
+include =
+    pancompare.py
+    pancompare_tests.py
+    panexport.py
