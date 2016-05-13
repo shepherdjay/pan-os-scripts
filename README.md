@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Nuttycomputer/pan-os-scripts.svg?branch=master)](https://travis-ci.org/Nuttycomputer/pan-os-scripts)
+
 ## PaloAlto Firewall Scripts
 
 ### Quick Start
