@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pancompare
 
-TEST_FILE_DIR = "../testfiles/"
+TEST_FILE_DIR = "testfiles/"
 
 
 def get_path(file):

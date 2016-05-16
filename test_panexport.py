@@ -5,9 +5,11 @@ from unittest.mock import patch
 
 import panexport
 
+TEST_FILE_DIR = "testfiles/"
+
 
 def get_path(file):
-    path = os.path.join(os.path.dirname(__file__), file)
+    path = os.path.join(os.path.dirname(__file__), TEST_FILE_DIR + file)
     return path
 
 
