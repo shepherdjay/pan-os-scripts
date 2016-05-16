@@ -3,9 +3,11 @@ from unittest import TestCase
 
 import pancompare
 
+TEST_FILE_DIR = "../testfiles/"
+
 
 def get_path(file):
-    path = os.path.join(os.path.dirname(__file__), file)
+    path = os.path.join(os.path.dirname(__file__), TEST_FILE_DIR + file)
     return path
 
 
@@ -20,8 +22,8 @@ class PancompareTests(TestCase):
         included filters test file.
         :return:
         """
-        script_config = pancompare.Config(get_path('testfiles/filters_test.yml'))
-        with open(get_path('testfiles/raw_dataplane_nomatch.txt'), 'r') as file:
+        script_config = pancompare.Config(get_path('filters_test.yml'))
+        with open(get_path('raw_dataplane_nomatch.txt'), 'r') as file:
             test_rule = file.read()
         filters = script_config.rule_filters
         self.assertTrue(type(pancompare.filter_dataplane_rules(test_rule, filters) is None))
