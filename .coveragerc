@@ -6,5 +6,5 @@ include =
     panexport.py
 
 [report]
-exlude_lines =
+exclude_lines =
     if __name__ == '__main__':
