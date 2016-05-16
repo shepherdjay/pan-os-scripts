@@ -2,8 +2,9 @@
 branch = True
 include =
     pancompare.py
-    pancompare_tests.py
     panexport.py
+    test_pancompare.py
+    test_panexport.py
 
 [report]
 exclude_lines =
