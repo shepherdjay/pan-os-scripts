@@ -4,3 +4,7 @@ include =
     pancompare.py
     pancompare_tests.py
     panexport.py
+
+[report]
+exlude_lines =
+    if __name__ == '__main__':

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # noinspection PyPackageRequirements
-import datetime
+from datetime import datetime
 
 import pan.xapi
 import xlsxwriter
@@ -34,6 +34,7 @@ def retrieve_firewall_configuration(hostname, api_key, config='running'):
     firewall.op(cmd=command, cmd_xml=True)
     return xmltodict.parse(firewall.xml_result())
 
+
 def combine_the_rulebase(pushed_config, running_config):
     pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
     device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase', 'entry')
@@ -47,11 +48,10 @@ def combine_the_rulebase(pushed_config, running_config):
 
 def safeget(dct, *keys):
     """
-    Takes a dictionary and key path. Checks if key exists and returns dictionary as list if not already, if not returns
-    empty list.
+    Takes a dictionary and key path. Checks if key exists and returns value of key
     :param dct: Dictionary to iterate over
     :param keys: Keys to iterate over
-    :return: Returns dictionary with reference to key if exists, else returns empty list.
+    :return: Returns value of key as list if it exists, else returns empty list
     """
     dct_as_list = []
     for key in keys:
@@ -218,11 +218,11 @@ def do_the_things(firewall, api_key, top_domain=''):
     # Finally let's write the damn thing
 
     write_to_excel(
-            combined_rulebase,
-            get_filename(firewall.strip(top_domain)),
-            rulebase_headers_order,
-            rulebase_headers_remove,
-            rulebase_default_map
+        combined_rulebase,
+        get_filename(firewall.strip(top_domain)),
+        rulebase_headers_order,
+        rulebase_headers_remove,
+        rulebase_default_map
     )
 
     # I should print something to let user know it worked.
@@ -234,9 +234,9 @@ def get_filename(firewall):
     """
     Generate an excel spreadsheet filename from a firewall name and the current time.
     :param firewall: firewall name
-    :return: A filename in the format YYYY-MM-DD-HHMMSS-{firewall}-combined-rules.xlsx
+    :return: A filename in the format YYYY-MM-DD-{firewall}-combined-rules.xlsx
     """
-    current_time = datetime.datetime.now()
+    current_time = datetime.now()
     return (
         "{year}-"
         "{month}-"
@@ -244,10 +244,10 @@ def get_filename(firewall):
         "{firewall}-combined-rules"
         ".xlsx"
     ).format(
-            firewall=firewall,
-            year=pad_to_two_digits(current_time.year),
-            month=pad_to_two_digits(current_time.month),
-            day=pad_to_two_digits(current_time.day),
+        firewall=firewall,
+        year=pad_to_two_digits(current_time.year),
+        month=pad_to_two_digits(current_time.month),
+        day=pad_to_two_digits(current_time.day),
     )
 
 
@@ -263,7 +263,9 @@ def pad_to_two_digits(n):
 def main():
     script_config = Config('config.yml')
     for firewall in script_config.firewall_hostnames:
-        do_the_things(firewall, script_config.firewall_api_key, script_config.top_domain)
+        do_the_things(firewall,
+                      script_config.firewall_api_key,
+                      script_config.top_domain)
 
 
 if __name__ == '__main__':
