@@ -132,7 +132,7 @@ def write_to_excel(item_list, filename, preferred_header_order=None, headers_to_
         excel_col += 1
         worksheet.write(excel_row, excel_col, header)
     # Write out rules
-    for i in range(0, len(item_list) - 1):
+    for i in range(0, len(item_list)):
         excel_col = 0
         excel_row = i + 1
         worksheet.write(excel_row, excel_col, excel_row)
