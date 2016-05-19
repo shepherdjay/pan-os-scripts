@@ -1,19 +1,24 @@
 import datetime
 import os
+import shutil
+import tempfile
 from unittest import TestCase
 from unittest.mock import patch
+
+import openpyxl
+import xmltodict
 
 import panexport
 
 TEST_FILE_DIR = "testfiles/"
 
 
-def get_path(file):
+def get_test_path(file):
     path = os.path.join(os.path.dirname(__file__), TEST_FILE_DIR + file)
     return path
 
 
-class TestHelperFunctions(TestCase):
+class TestPanExport(TestCase):
     def test_pad_digits(self):
         number_to_pad = 5
         expected = "05"
@@ -58,3 +63,26 @@ class TestHelperFunctions(TestCase):
 
         self.assertEqual(output_nokey, [])
         self.assertEqual(output_key, ["success"])
+
+
+class FileTests(TestCase):
+    def setUp(self):
+        self.golden_file = openpyxl.load_workbook(get_test_path("panexport_golden_output.xlsx"))
+        self.tmp_dir = tempfile.mkdtemp()
+
+    def doCleanups(self):
+        shutil.rmtree(self.tmp_dir)
+
+    def test_write_to_excel(self):
+        test_filename = os.path.join(self.tmp_dir, "test_write_to_excel.xlsx")
+        with open(get_test_path('test_rules.xml'), mode='r') as file:
+            example_rules = xmltodict.parse(file.read())['rules']['entry']
+
+        panexport.write_to_excel(item_list=example_rules,
+                                 filename=test_filename,
+                                 headers_to_remove=panexport.HEADERS_REMOVE,
+                                 preferred_header_order=panexport.HEADERS_ORDER,
+                                 default_map=panexport.HEADERS_DEFAULT_MAP)
+
+        test_file = openpyxl.load_workbook(test_filename)
+        self.assertEqual(self.golden_file.active.rows[1], test_file.active.rows[1])
