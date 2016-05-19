@@ -8,6 +8,14 @@ import xlsxwriter
 import xmltodict
 import yaml
 
+HEADERS_DEFAULT_MAP = {'rule-type': 'universal', 'negate-source': 'no', 'negate-destination': 'no'}
+
+HEADERS_REMOVE = ['option', 'profile-setting', 'disabled', 'log-end', 'log-start', 'category']
+
+HEADERS_ORDER = ['@name', 'action', 'tag', 'rule-type', 'from', 'source', 'negate-source', 'source-user',
+                 'hip-profiles',
+                 'to', 'destination', 'negate-destination', 'application', 'service', 'profile-setting', 'description']
+
 __author__ = 'Jay Shepherd'
 
 
@@ -124,7 +132,7 @@ def write_to_excel(item_list, filename, preferred_header_order=None, headers_to_
         excel_col += 1
         worksheet.write(excel_row, excel_col, header)
     # Write out rules
-    for i in range(0, len(item_list) - 1):
+    for i in range(0, len(item_list)):
         excel_col = 0
         excel_row = i + 1
         worksheet.write(excel_row, excel_col, excel_row)
@@ -174,46 +182,18 @@ def do_the_things(firewall, api_key, top_domain=''):
     combined_rulebase = combine_the_rulebase(pushed_config, running_config)
 
     # Define headers we care about being ordered in the order they should be.
-    rulebase_headers_order = [
-        '@name',
-        'action',
-        'tag',
-        'rule-type',
-        'from',
-        'source',
-        'negate-source',
-        'source-user',
-        'hip-profiles',
-        'to',
-        'destination',
-        'negate-destination',
-        'application',
-        'service',
-        'profile-setting',
-        'description'
-    ]
+    rulebase_headers_order = HEADERS_ORDER
 
     # I'm removing excel columns that I don't want in output based upon stupid stuff.
     # Perhaps I don't care.
     # Perhaps the fields just don't work correctly because PaloAlto output refuses any consistency.
     # Yeah I'm going to go with the latter option.
-    rulebase_headers_remove = [
-        'option',
-        'profile-setting',
-        'disabled',
-        'log-end',
-        'log-start',
-        'category'
-    ]
+    rulebase_headers_remove = HEADERS_REMOVE
 
     # Remember that consistency thing...
     # ... yeah this is to populate the excel fields with known default mappings.
     # This is for fields I do need to be in output.
-    rulebase_default_map = {
-        'rule-type': 'universal',
-        'negate-source': 'no',
-        'negate-destination': 'no',
-    }
+    rulebase_default_map = HEADERS_DEFAULT_MAP
 
     # Finally let's write the damn thing
 

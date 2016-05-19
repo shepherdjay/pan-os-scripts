@@ -1,2 +1,5 @@
 pytest
 pytest-cov
+openpyxl==2.3.5
+pandas==0.18.1
+xlrd==0.9.4
