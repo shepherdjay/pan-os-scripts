@@ -255,7 +255,14 @@ def filter_dataplane_rules(dataplane_raw, filters):
     return completed_filter
 
 
-def print_out(firewall, completed_filter):
+def print_out(firewall, completed_filter):  # pragma: no cover
+    """
+    Prints out the firewall followed by the list of rules matching the filter
+    TODO: Replace this with a direct write to excel sheet from panexport. Requires VLOOKUP
+    :param firewall: Firewall being processed as string
+    :param completed_filter: A set of strings
+    :return:
+    """
     print(firewall)
     for rule in completed_filter:
         print(rule)
