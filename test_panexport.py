@@ -5,8 +5,8 @@ import tempfile
 from unittest import TestCase
 from unittest.mock import patch
 
-import openpyxl
 import xmltodict
+from pandas import read_excel
 
 import panexport
 
@@ -67,13 +67,22 @@ class TestPanExport(TestCase):
 
 class FileTests(TestCase):
     def setUp(self):
-        self.golden_file = openpyxl.load_workbook(get_test_path("panexport_golden_output.xlsx"))
         self.tmp_dir = tempfile.mkdtemp()
 
     def doCleanups(self):
         shutil.rmtree(self.tmp_dir)
 
+    def excel_to_dictionary(self, filepath):
+        """
+        Uses pandas to convert an excel sheet to a python dictionary.
+        :param filepath: Path to excel file
+        :return: Python Dictionary
+        """
+        data = read_excel(filepath)
+        return data.to_dict()
+
     def test_write_to_excel(self):
+        self.maxDiff = None
         test_filename = os.path.join(self.tmp_dir, "test_write_to_excel.xlsx")
         with open(get_test_path('test_rules.xml'), mode='r') as file:
             example_rules = xmltodict.parse(file.read())['rules']['entry']
@@ -84,5 +93,7 @@ class FileTests(TestCase):
                                  preferred_header_order=panexport.HEADERS_ORDER,
                                  default_map=panexport.HEADERS_DEFAULT_MAP)
 
-        test_file = openpyxl.load_workbook(test_filename)
-        self.assertEqual(self.golden_file.active.rows[1], test_file.active.rows[1])
+        golden_file = self.excel_to_dictionary(get_test_path("panexport_golden_output.xlsx"))
+        test_file = self.excel_to_dictionary(test_filename)
+
+        self.assertEqual(golden_file, test_file)
