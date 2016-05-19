@@ -2,3 +2,4 @@ config.yml
 .idea/
 *.xlsx
 .cache/
+!testfiles/
