@@ -1,7 +1,10 @@
 import os
 from unittest import TestCase
+import netaddr
 
 import pancompare
+from contextlib import redirect_stdout
+import io
 
 TEST_FILE_DIR = "testfiles/"
 
@@ -26,4 +29,12 @@ class PancompareTests(TestCase):
         with open(get_path('raw_dataplane_nomatch.txt'), 'r') as file:
             test_rule = file.read()
         filters = script_config.rule_filters
+
         self.assertTrue(type(pancompare.filter_dataplane_rules(test_rule, filters) is None))
+
+    def test_map_to_address(self):
+        host = pancompare.map_to_address("192.168.1.1")
+        network = pancompare.map_to_address("192.168.0.1/32")
+
+        self.assertIsInstance(host, netaddr.IPAddress)
+        self.assertIsInstance(network, netaddr.IPNetwork)
