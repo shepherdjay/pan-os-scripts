@@ -1,0 +1,70 @@
+<rules>
+    <entry name="Very Important">
+        <to>
+            <member>any</member>
+        </to>
+        <from>
+            <member>any</member>
+        </from>
+        <source>
+            <member>Documentation Group</member>
+        </source>
+        <destination>
+            <member>1.1.1.1</member>
+        </destination>
+        <source-user>
+            <member>any</member>
+        </source-user>
+        <category>
+            <member>any</member>
+        </category>
+        <application>
+            <member>web-browsing</member>
+            <member>ssl</member>
+        </application>
+        <service>
+            <member>application-default</member>
+        </service>
+        <hip-profiles>
+            <member>any</member>
+        </hip-profiles>
+        <action>allow</action>
+        <description>This rule is very important, it is at top</description>
+        <log-setting>Syslog</log-setting>
+    </entry>
+
+    <entry name="Semi-Important">
+        <to>
+            <member>Internet</member>
+        </to>
+        <from>
+            <member>any</member>
+        </from>
+        <source>
+            <member>10.11.0.1</member>
+        </source>
+        <destination>
+            <member>2.2.2.2</member>
+        </destination>
+        <source-user>
+            <member>any</member>
+        </source-user>
+        <category>
+            <member>any</member>
+        </category>
+        <application>
+            <member>any</member>
+        </application>
+        <service>
+            <member>http</member>
+        </service>
+        <hip-profiles>
+            <member>any</member>
+        </hip-profiles>
+        <action>allow</action>
+        <description>Probably important but I'm not sure</description>
+        <tag>
+            <member>YOUR IT</member>
+        </tag>
+    </entry>
+</rules>
