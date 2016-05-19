@@ -1,10 +1,9 @@
 import os
 from unittest import TestCase
+
 import netaddr
 
 import pancompare
-from contextlib import redirect_stdout
-import io
 
 TEST_FILE_DIR = "testfiles/"
 

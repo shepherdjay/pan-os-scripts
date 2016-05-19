@@ -1,2 +1,3 @@
 pytest
 pytest-cov
+openpyxl==2.3.5
