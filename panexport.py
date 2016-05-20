@@ -4,7 +4,6 @@
 from datetime import datetime
 
 import pan.xapi
-import xlsxwriter
 import xmltodict
 import yaml
 import tablib
