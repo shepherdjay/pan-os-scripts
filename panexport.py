@@ -133,7 +133,7 @@ def write_to_excel(rule_list, filename, preferred_header_order=None, headers_to_
         formatted_rule = [index_num]
 
         for header in dataset.headers:
-            cell = rule_list[rule].get(header, '')
+            cell = rule.get(header, '')
             if isinstance(cell, dict):
                 cell = cell.get('member', cell)
             if isinstance(cell, list):
