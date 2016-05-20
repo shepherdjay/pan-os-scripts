@@ -18,7 +18,8 @@ install:
   - pip install conda
   - conda update conda --yes
   # Test Requirements
-  - deps="pip pandas==0.18.1 pytest pytest-cov openpyxl==2.3.5 pandas==0.18.1 xlrd==0.9.4"
+  - deps="pip pandas==0.18.1 pytest pytest-cov openpyxl==2.3.5 pandas==0.18.1
+xlrd==0.9.4"
   - conda create -p $HOME/py --yes $deps "python=$TRAVIS_PYTHON_VERSION"
   - export PATH=$HOME/py/bin:$PATH
   # Install package requirements
