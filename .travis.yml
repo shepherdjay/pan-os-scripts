@@ -15,26 +15,15 @@ matrix:
 
 install:
   # Install Conda
-  - sudo apt-get update
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  # Useful for debugging any issues with conda
-  - conda info -a
-
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pytest-cov openpyxl==2.3.5 pandas==0.18.1 xlrd==0.9.4 pan-python==0.8.0 PyYAML==3.11 xmltodict==0.9.2 netaddr==0.7.18 tablib
-  - source activate test-environment
-  - python setup.py install
+  - sudo -H pip install auxlib
+  - sudo -H pip install conda
+  - sudo -H conda update conda --yes
+  # Test Requirements
+  - deps="pip pandas==0.18.1 pytest pytest-cov openpyxl==2.3.5 pandas==0.18.1 xlrd==0.9.4"
+  - conda create -p $HOME/py --yes $deps "python=$TRAVIS_PYTHON_VERSION"
+  - export PATH=$HOME/py/bin:$PATH
+  # Install package requirements
+  - pip install -r requirements.txt
 
  #command to run tests
 script: py.test --cov
