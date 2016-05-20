@@ -87,7 +87,7 @@ class FileTests(TestCase):
         with open(get_test_path('test_rules.xml'), mode='r') as file:
             example_rules = xmltodict.parse(file.read())['rules']['entry']
 
-        panexport.write_to_excel(item_list=example_rules,
+        panexport.write_to_excel(rule_list=example_rules,
                                  filename=test_filename,
                                  headers_to_remove=panexport.HEADERS_REMOVE,
                                  preferred_header_order=panexport.HEADERS_ORDER,

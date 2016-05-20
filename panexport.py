@@ -7,6 +7,7 @@ import pan.xapi
 import xlsxwriter
 import xmltodict
 import yaml
+import tablib
 
 HEADERS_DEFAULT_MAP = {'rule-type': 'universal', 'negate-source': 'no', 'negate-destination': 'no'}
 
@@ -118,27 +119,21 @@ def check_default(object_to_check, default_key, default_map=None):
     return object_to_check
 
 
-def write_to_excel(item_list, filename, preferred_header_order=None, headers_to_remove=None, default_map=None):
-    # First get headers for excel sheet from helper function
-    headers = get_headers(item_list, preferred_header_order, headers_to_remove)
-    # Define workbook
-    workbook = xlsxwriter.Workbook(filename)
-    worksheet = workbook.add_worksheet()
-    excel_row = 0
-    excel_col = 0
-    # Write Headers
-    worksheet.write(0, 0, 'Order')
-    for header in headers:
-        excel_col += 1
-        worksheet.write(excel_row, excel_col, header)
-    # Write out rules
-    for i in range(0, len(item_list)):
-        excel_col = 0
-        excel_row = i + 1
-        worksheet.write(excel_row, excel_col, excel_row)
-        for header in headers:
-            excel_col += 1
-            cell = item_list[i].get(header, '')
+def write_to_excel(rule_list, filename, preferred_header_order=None, headers_to_remove=None, default_map=None):
+    # Initialize Tablib Data
+    dataset = tablib.Dataset()
+
+    # Define headers we would like to include
+    dataset.headers = get_headers(rule_list, preferred_header_order, headers_to_remove)
+
+    # Add rules to dataset
+    index_num = 0
+    for rule in rule_list:
+        index_num += 1
+        formatted_rule = [index_num]
+
+        for header in dataset.headers:
+            cell = rule_list[rule].get(header, '')
             if isinstance(cell, dict):
                 cell = cell.get('member', cell)
             if isinstance(cell, list):
@@ -150,11 +145,16 @@ def write_to_excel(item_list, filename, preferred_header_order=None, headers_to_
                         first_item = False
                     else:
                         combined_cell += ', {}'.format(item)
-                worksheet.write(excel_row, excel_col, combined_cell)
+                formatted_rule.append(combined_cell)
             else:
                 safe_cell = check_default(str(cell), header, default_map)
-                worksheet.write(excel_row, excel_col, safe_cell)
-    workbook.close()
+                formatted_rule.append(safe_cell)
+
+        dataset.append(formatted_rule)
+
+    # Use tablib to write rules
+    with open(filename, mode='r') as file:
+        file.write(dataset.xlsx)
 
 
 def do_the_things(firewall, api_key, top_domain=''):
