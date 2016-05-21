@@ -4,10 +4,9 @@
 from datetime import datetime
 
 import pan.xapi
-import xlsxwriter
+import tablib
 import xmltodict
 import yaml
-import tablib
 
 HEADERS_DEFAULT_MAP = {'rule-type': 'universal', 'negate-source': 'no', 'negate-destination': 'no'}
 
@@ -124,7 +123,8 @@ def write_to_excel(rule_list, filename, preferred_header_order=None, headers_to_
     dataset = tablib.Dataset()
 
     # Define headers we would like to include
-    dataset.headers = list("Order").append(get_headers(rule_list, preferred_header_order, headers_to_remove))
+    rule_headers = get_headers(rule_list, preferred_header_order, headers_to_remove)
+    dataset.headers = ["Order"] + rule_headers
 
     # Add rules to dataset
     index_num = 0
@@ -132,7 +132,7 @@ def write_to_excel(rule_list, filename, preferred_header_order=None, headers_to_
         index_num += 1
         formatted_rule = [index_num]
 
-        for header in dataset.headers:
+        for header in rule_headers:
             cell = rule.get(header, '')
             if isinstance(cell, dict):
                 cell = cell.get('member', cell)
