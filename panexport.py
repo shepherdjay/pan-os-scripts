@@ -124,7 +124,7 @@ def write_to_excel(rule_list, filename, preferred_header_order=None, headers_to_
     dataset = tablib.Dataset()
 
     # Define headers we would like to include
-    dataset.headers = get_headers(rule_list, preferred_header_order, headers_to_remove)
+    dataset.headers = list("Order").append(get_headers(rule_list, preferred_header_order, headers_to_remove))
 
     # Add rules to dataset
     index_num = 0
