@@ -153,7 +153,7 @@ def write_to_excel(rule_list, filename, preferred_header_order=None, headers_to_
         dataset.append(formatted_rule)
 
     # Use tablib to write rules
-    with open(filename, mode='r') as file:
+    with open(filename, mode='w') as file:
         file.write(dataset.xlsx)
 
 
