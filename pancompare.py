@@ -71,8 +71,12 @@ def convert_to_ipobject(string):
     :param string: A string of ip addresses, networks, ranges, hex values.
     :return: An IPSet of extracted IPs
     """
-    ip_range_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})-([0-9]{1,3}(?:\.[0-9]{1,3}){0,3})')
-    ip_address_regex = re.compile('([0-9]{1,3}(?:\.[0-9]{1,3}){0,3}(?:\/[0-9]+)*)')
+    ipv4_range_regex = re.compile(
+        '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})-([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})')
+    ipv4_address_regex = re.compile(
+        '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(?:\/[0-9]+)*)')
+    ipv6_address_regex = re.compile(
+        '([0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}(?:\/[0-9]+)*)')
     ip_hex_regex = re.compile(r'0x([0-9a-f]+)(\/\d+)')
 
     if string == 'any':
@@ -91,16 +95,18 @@ def convert_to_ipobject(string):
     # Look for Ranges second and remove from string, also convert them to range objects.
     # This allows us to reduce complexity of the ip address regex.
     # I'm not using a map like the other devices to due a bug in netaddr reported issue 121
-    ip_ranges = ip_range_regex.findall(string)
+    ip_ranges = ipv4_range_regex.findall(string)
     ipset_ranges = range_to_set(ip_ranges)
-    string = ip_range_regex.sub('', string)
+    string = ipv4_range_regex.sub('', string)
 
     # Find IPAddresses
-    ip_addresses = ip_address_regex.findall(string)
-    ip_address_objects = list(map(map_to_address, ip_addresses))
+    ipv4_addresses = ipv4_address_regex.findall(string)
+    ipv6_addresses = ipv6_address_regex.findall(string)
+    ipv4_address_objects = list(map(map_to_address, ipv4_addresses))
+    ipv6_address_objects = list(map(map_to_address, ipv6_addresses))
 
     # Combine Both Sets
-    ipset_add_hex = netaddr.IPSet(ip_address_objects + iphex_objects)
+    ipset_add_hex = netaddr.IPSet(ipv4_address_objects + ipv6_address_objects + iphex_objects)
     return ipset_ranges | ipset_add_hex
 
 

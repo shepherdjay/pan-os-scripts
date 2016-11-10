@@ -2,7 +2,7 @@
 
 "Test Dataplane" {
         from Lan;
-        source any;
+        source 192.168.1.1;
         source-region none;
         to Internet;
         destination 10.11.0.0/16;
@@ -14,6 +14,21 @@
         terminal yes;
 }
 
+"IPV6 New Version" {
+        from Internet;
+        source any;
+        source-region none;
+        to Lan;
+        destination [ 0:0:0:0:0:0:0:0/101 0:0:0:0:0:0:800:0/103 0:0:0:0:0:0:a00:0/107 0:0:0:0:0:0:a20:0/109 ];
+        destination-region none;
+        user any;
+        category any;
+        application/service icmp/icmp/any/any;
+        action allow;
+        icmp-unreachable: no
+        terminal yes;
+}
+
 dynamic url: no
 pol objs matched
 
@@ -22,7 +37,7 @@ DP dp1:
 
 "Test Dataplane" {
         from Lan;
-        source any;
+        source 192.168.1.1;
         source-region none;
         to Internet;
         destination 10.11.0.0/16;
@@ -32,6 +47,22 @@ DP dp1:
         application/service [ any/tcp/any/20 any/tcp/any/21 ];
         action allow;
         terminal yes;
+}
+
+"IPV6 New Version" {
+        from Internet;
+        source any;
+        source-region none;
+        to Lan;
+        destination [ 0:0:0:0:0:0:0:0/101 0:0:0:0:0:0:800:0/103 0:0:0:0:0:0:a00:0/107 0:0:0:0:0:0:a20:0/109 ];
+        destination-region none;
+        user any;
+        category any;
+        application/service icmp/icmp/any/any;
+        action allow;
+        icmp-unreachable: no
+        terminal yes;
+}
 
 dynamic url: no
 pol objs matched
