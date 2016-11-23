@@ -1,5 +1,5 @@
 ## PaloAlto Firewall Scripts
-[![Build Status](https://travis-ci.org/Nuttycomputer/pan-os-scripts.svg?branch=master)](https://travis-ci.org/Nuttycomputer/pan-os-scripts) [![codecov](https://codecov.io/gh/Nuttycomputer/pan-os-scripts/branch/master/graph/badge.svg)](https://codecov.io/gh/Nuttycomputer/pan-os-scripts)
+[![Build Status](https://travis-ci.org/shepherdjay/pan-os-scripts.svg?branch=master)](https://travis-ci.org/shepherdjay/pan-os-scripts) [![codecov](https://codecov.io/gh/shepherdjay/pan-os-scripts/branch/master/graph/badge.svg)](https://codecov.io/gh/shepherdjay/pan-os-scripts)
 
 
 ### Quick Start
