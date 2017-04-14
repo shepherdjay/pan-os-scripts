@@ -37,3 +37,18 @@ class PancompareTests(TestCase):
 
         self.assertIsInstance(host, netaddr.IPAddress)
         self.assertIsInstance(network, netaddr.IPNetwork)
+
+    def test_empty_filter(self):
+        """
+        This test is for Issue 16 in which the filters are not actually optional.
+        :return: 
+        """
+        script_config = pancompare.Config(get_path('filters_test_issue16.yml'))
+        with open(get_path('raw_dataplane_nomatch.txt'), 'r') as file:
+            test_rule = file.read()
+        filters = script_config.rule_filters
+        expected_rule_list = ['Test Dataplane', 'IPV6 New Version']
+
+        filtered_rule_list = pancompare.filter_dataplane_rules(test_rule, filters)
+
+        self.assertEqual(expected_rule_list, filtered_rule_list)
