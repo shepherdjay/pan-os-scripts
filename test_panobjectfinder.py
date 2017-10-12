@@ -45,3 +45,13 @@ class TestPanObjectFinder(TestCase):
         resulted_dict, errors = panobjectfinder.merge_dictionaries(dict1, dict2)
         self.assertDictEqual(expected_dict, resulted_dict)
         self.assertEqual(errors, expected_errors)
+
+    def test_find_objects_pushed_config(self):
+        expected_result = {'DOC1': '10.1.1.1/32', 'DOC2': '10.2.2.2/32'}
+        with open(get_test_path('pushed_shared_policy.xml'), mode='r') as file:
+            firewall_config = file.read()
+        with open(get_test_path('test_objectlist.yml'), mode='r') as file:
+            objectlist = file.read()
+
+        result = panobjectfinder.find_objects(firewall_config, objectlist)
+        self.assertDictEqual(result, expected_result)

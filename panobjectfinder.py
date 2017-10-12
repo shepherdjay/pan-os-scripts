@@ -1,5 +1,6 @@
-from panexport import retrieve_firewall_configuration
+from panexport import retrieve_firewall_configuration, safeget
 import yaml
+import xml.etree.ElementTree
 
 
 class Config:
@@ -63,6 +64,27 @@ def merge_dictionaries(dict1, dict2):
 
 
 def find_objects(firewall_config, object_list):
+    """
+    Takes a firewall config and object list. Finds the objects in the config and returns a dictionary
+    :param firewall_config: Firewall Config as XML
+    :param object_list:
+    :return:
+    """
+    result_dict = {}
+
+    # Convert to xml tree for use:
+    config_xml = xml.etree.ElementTree.fromstring(firewall_config)
+    # Sort Address Objects by Type
+    address_entries = config_xml.findall('.//*address/entry')
+    # Take Object List and Find Members
+    for entry in address_entries:
+        if entry.attrib["name"] in object_list:
+            result_dict[entry.attrib["name"]] = entry[0].text
+    # Return Found Objects as Dictionary
+    return result_dict
+
+
+def write_output(dictionary, errors):
     return True
 
 
@@ -72,7 +94,6 @@ def main():
     master_dictionary = {}
     errors = []
     for firewall in script_config.firewall_hostnames:
-        firewall_config = retrieve_firewall_configuration(firewall, script_config.firewall_api_key)
-        results = find_objects(firewall_config, object_list)
+        results = find_objects(firewall, object_list)
         master_dictionary, new_errors = merge_dictionaries(master_dictionary, results)
         errors.append(new_errors)
