@@ -1,0 +1,239 @@
+<response status="success">
+    <result>
+        <policy cfg-version="7.0.0" urldb="paloaltonetworks" dg-ctxt="13|14">
+            <shared/>
+            <panorama>
+                <address>
+                    <entry name="DOC1">
+                        <ip-netmask>10.1.1.1/32</ip-netmask>
+                    </entry>
+                    <entry name="DOC2">
+                        <ip-netmask>10.2.2.2/32</ip-netmask>
+                    </entry>
+                    <entry name="RANGE">
+                        <ip-range>10.3.3.0-10.3.3.220</ip-range>
+                    </entry>
+                    <entry name="Google">
+                        <fqdn>www.google.com</fqdn>
+                    </entry>
+                </address>
+                <address-group>
+                    <entry name="Documentation Group">
+                        <static>
+                            <member>DOC1</member>
+                            <member>DOC2</member>
+                            <member>RANGE</member>
+                            <member>Google</member>
+                        </static>
+                    </entry>
+                </address-group>
+                <external-list>
+                    <recurring>
+                        <weekly>
+                            <day-of-week>sunday</day-of-week>
+                            <at>07:00</at>
+                        </weekly>
+                    </recurring>
+                    <url>http://nettools.maverik.com/whitelist/as209.txt</url>
+                    <type>ip</type>
+                    <description>AS209 IPs</description>
+                </external-list>
+                <region/>
+                <service>
+                    <entry name="tcp-0-1024">
+                        <protocol>
+                            <tcp>
+                                <port>0-1024</port>
+                            </tcp>
+                        </protocol>
+                        <description>I know these</description>
+                    </entry>
+                    <entry name="udp-0-1024">
+                        <protocol>
+                            <udp>
+                                <port>16420-16427</port>
+                            </udp>
+                        </protocol>
+                        <description>and these</description>
+                    </entry>
+                </service>
+                <service-group>
+                    <entry name="WellKnown">
+                        <members>
+                            <member>tcp-0-1024</member>
+                            <member>udp-0-1024</member>
+                        </members>
+                    </entry>
+                </service-group>
+                <application>
+                </application>
+                <application-filter/>
+                <application-group>
+                </application-group>
+                <schedule>
+                </schedule>
+                <profile-group>
+                </profile-group>
+                <tag>
+                    <entry name="YOUR IT">
+                        <color>color10</color>
+                    </entry>
+                </tag>
+                <application-status/>
+                <threats>
+                    <vulnerability/>
+                    <spyware/>
+                </threats>
+                <profiles>
+                    <virus>
+                    </virus>
+                    <spyware>
+                    </spyware>
+                    <vulnerability>
+                    </vulnerability>
+                    <url-filtering>
+                    </url-filtering>
+                    <custom-url-category>
+                    </custom-url-category>
+                    <file-blocking>
+                    </file-blocking>
+                    <data-filtering>
+                    </data-filtering>
+                    <data-objects>
+                    </data-objects>
+                    <hip-objects/>
+                    <hip-profiles/>
+                    <dos-protection/>
+                    <decryption>
+                    </decryption>
+                    <wildfire-analysis>
+                    </wildfire-analysis>
+                </profiles>
+                <log-settings>
+                    <profiles>
+                    </profiles>
+                </log-settings>
+                <pre-rulebase>
+                    <security>
+                        <rules>
+                            <entry name="Very Important">
+                                <to>
+                                    <member>any</member>
+                                </to>
+                                <from>
+                                    <member>any</member>
+                                </from>
+                                <source>
+                                    <member>Documentation Group</member>
+                                </source>
+                                <destination>
+                                    <member>1.1.1.1</member>
+                                </destination>
+                                <source-user>
+                                    <member>any</member>
+                                </source-user>
+                                <category>
+                                    <member>any</member>
+                                </category>
+                                <application>
+                                    <member>web-browsing</member>
+                                    <member>ssl</member>
+                                </application>
+                                <service>
+                                    <member>application-default</member>
+                                </service>
+                                <hip-profiles>
+                                    <member>any</member>
+                                </hip-profiles>
+                                <action>allow</action>
+                                <description>This rule is very important, it is at top</description>
+                                <log-setting>Syslog</log-setting>
+                            </entry>
+
+                            <entry name="Semi-Important">
+                                <to>
+                                    <member>Internet</member>
+                                </to>
+                                <from>
+                                    <member>any</member>
+                                </from>
+                                <source>
+                                    <member>10.11.0.1</member>
+                                </source>
+                                <destination>
+                                    <member>2.2.2.2</member>
+                                </destination>
+                                <source-user>
+                                    <member>any</member>
+                                </source-user>
+                                <category>
+                                    <member>any</member>
+                                </category>
+                                <application>
+                                    <member>any</member>
+                                </application>
+                                <service>
+                                    <member>http</member>
+                                </service>
+                                <hip-profiles>
+                                    <member>any</member>
+                                </hip-profiles>
+                                <action>allow</action>
+                                <description>Probably important but I'm not sure</description>
+                                <tag>
+                                    <member>YOUR IT</member>
+                                </tag>
+                            </entry>
+                        </rules>
+                    </security>
+                    <application-override>
+                    </application-override>
+                    <dos>
+                        <rules/>
+                    </dos>
+                    <nat>
+                        <rules>
+                        </rules>
+                    </nat>
+                    <decryption>
+                        <rules>
+                        </rules>
+                    </decryption>
+                    <pbf>
+                        <rules>
+                        </rules>
+                    </pbf>
+                </pre-rulebase>
+                <post-rulebase>
+                    <pbf>
+                        <rules/>
+                    </pbf>
+                    <security>
+                        <rules>
+                        </rules>
+                    </security>
+                    <default-security-rules>
+                        <rules>
+                            <entry name="intrazone-default">
+                                <action>allow</action>
+                                <log-start>no</log-start>
+                                <log-end>no</log-end>
+                                <profile-setting>
+                                    <group>
+                                    </group>
+                                </profile-setting>
+                                <log-setting></log-setting>
+                            </entry>
+                            <entry name="interzone-default">
+                                <action>deny</action>
+                                <log-start>no</log-start>
+                                <log-end>no</log-end>
+                                <log-setting></log-setting>
+                            </entry>
+                        </rules>
+                    </default-security-rules>
+                </post-rulebase>
+            </panorama>
+        </policy>
+    </result>
+</response>
