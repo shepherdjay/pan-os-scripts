@@ -1,4 +1,4 @@
-from panexport import retrieve_firewall_configuration, safeget
+import pan.xapi
 import yaml
 import xml.etree.ElementTree
 
@@ -20,7 +20,8 @@ class Config:
 class ObjectList:
     def __init__(self, filename):
         with open(filename, 'r') as stream:
-            self.objectlist = yaml.load(stream)
+            objectlist = yaml.load(stream)
+        self.addresses = objectlist['addresses']
 
 
 def merge_dictionaries(dict1, dict2):
@@ -99,8 +100,41 @@ def find_address_objects(firewall_config, object_list):
     return result_dict
 
 
+def retrieve_firewall_configuration_as_xml(hostname, api_key, config='running'):
+    """
+    This takes the FQDN of the firewall and retrieves the requested config.
+    Defaults to running.
+    :param hostname: Hostname (FQDN) of firewall to retrieve configuration from
+    :param api_key:  API key to access firewall configuration
+    ;param config: Which config to retrieve, defaults to running.
+    :return: XML
+    """
+    firewall = pan.xapi.PanXapi(hostname=hostname, api_key=api_key)
+    command = "show config {}".format(config)
+    firewall.op(cmd=command, cmd_xml=True)
+    return firewall.xml_result()
+
+
+def retrieve_and_merge(firewall, api_key):
+    running_config = retrieve_firewall_configuration_as_xml(firewall,
+                                                            api_key,
+                                                            config='running')
+    pushed_config = retrieve_firewall_configuration_as_xml(firewall,
+                                                           api_key,
+                                                           config='pushed-shared-policy')
+    return running_config + pushed_config
+
+
 def write_output(dictionary, errors):
+    print(dictionary.items())
+    print(errors)
     return True
+
+
+def do_things(firewall, api_key, object_list):
+    firewall_config = retrieve_and_merge(firewall, api_key)
+    results = find_address_objects(firewall_config, object_list)
+    return results
 
 
 def main():
@@ -109,6 +143,11 @@ def main():
     master_dictionary = {}
     errors = []
     for firewall in script_config.firewall_hostnames:
-        results = find_address_objects(firewall_config, object_list['addresses'])
-        master_dictionary, new_errors = merge_dictionaries(master_dictionary, results)
+        results_for_firewall = do_things(firewall, script_config.firewall_api_key, object_list.addresses)
+        master_dictionary, new_errors = merge_dictionaries(master_dictionary, results_for_firewall)
         errors.append(new_errors)
+    write_output(master_dictionary, errors)
+
+
+if __name__ == '__main__':
+    main()

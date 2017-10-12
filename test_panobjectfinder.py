@@ -17,12 +17,12 @@ def get_test_path(file):
 
 
 class TestFunctionalTest(TestCase):
-    @patch('panobjectfinder.retrieve_firewall_configuration')
-    def test_take_config_and_output_expected_excel_file(self, mock_config):
+    @patch('panobjectfinder.retrieve_firewall_configuration_as_xml')
+    def test_take_config_and_output_expected_excel_file(self, mock_firewall_config):
         with open(get_test_path('pushed_shared_policy.xml'), 'r') as file:
-            mock_config.returnvalue = file.read()
-        self.fail("Working on test")
-
+            mock_firewall_config.retrieve_firewall_configuration_as_xml.returnvalue = file.read()
+        panobjectfinder.do_things("test_firewall", "fake-api", ['DOC1', 'DOC2', 'Documentation Group'])
+        
 
 class TestPanObjectFinder(TestCase):
     def test_merge_dictionaries(self):
