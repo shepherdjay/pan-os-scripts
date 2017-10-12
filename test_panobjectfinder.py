@@ -16,6 +16,14 @@ def get_test_path(file):
     return path
 
 
+class TestFunctionalTest(TestCase):
+    @patch('panobjectfinder.retrieve_firewall_configuration')
+    def test_take_config_and_output_expected_excel_file(self, mock_config):
+        with open(get_test_path('pushed_shared_policy.xml'), 'r') as file:
+            mock_config.returnvalue = file.read()
+        self.fail("Working on test")
+
+
 class TestPanObjectFinder(TestCase):
     def test_merge_dictionaries(self):
         dict1 = {'a': 1}
@@ -46,12 +54,20 @@ class TestPanObjectFinder(TestCase):
         self.assertDictEqual(expected_dict, resulted_dict)
         self.assertEqual(errors, expected_errors)
 
-    def test_find_objects_pushed_config(self):
+    def test_find_address(self):
         expected_result = {'DOC1': '10.1.1.1/32', 'DOC2': '10.2.2.2/32'}
         with open(get_test_path('pushed_shared_policy.xml'), mode='r') as file:
             firewall_config = file.read()
-        with open(get_test_path('test_objectlist.yml'), mode='r') as file:
-            objectlist = file.read()
+        objectlist = ['DOC1', 'DOC2']
 
-        result = panobjectfinder.find_objects(firewall_config, objectlist)
+        result = panobjectfinder.find_address_objects(firewall_config, objectlist)
+        self.assertDictEqual(result, expected_result)
+
+    def test_find_address_groups(self):
+        expected_result = {'Documentation Group': ['DOC1', 'DOC2', 'RANGE', 'Google']}
+        with open(get_test_path('pushed_shared_policy.xml'), mode='r') as file:
+            firewall_config = file.read()
+        objectlist = ['Documentation Group']
+
+        result = panobjectfinder.find_address_objects(firewall_config, objectlist)
         self.assertDictEqual(result, expected_result)

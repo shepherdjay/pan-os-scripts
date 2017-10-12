@@ -2,6 +2,11 @@ from panexport import retrieve_firewall_configuration, safeget
 import yaml
 import xml.etree.ElementTree
 
+XML_PATHDICTIONARY = {
+    'addresses': './/*address/entry',
+    'address-groups': './/*address-group/entry',
+}
+
 
 class Config:
     def __init__(self, filename):
@@ -63,23 +68,33 @@ def merge_dictionaries(dict1, dict2):
     return result_dict, list(set(errors))
 
 
-def find_objects(firewall_config, object_list):
+def find_address_objects(firewall_config, object_list):
     """
-    Takes a firewall config and object list. Finds the objects in the config and returns a dictionary
+    Takes a firewall config and object list. Finds all the objects in the list that might be addresses
     :param firewall_config: Firewall Config as XML
-    :param object_list:
-    :return:
+    :param object_list: list of object names
+    :param xmlpath: xmlpath to search for
+    :return: results as dictionary
     """
     result_dict = {}
-
     # Convert to xml tree for use:
     config_xml = xml.etree.ElementTree.fromstring(firewall_config)
-    # Sort Address Objects by Type
-    address_entries = config_xml.findall('.//*address/entry')
-    # Take Object List and Find Members
-    for entry in address_entries:
+
+    # Find address objects
+    entries = config_xml.findall(XML_PATHDICTIONARY['addresses'])
+    # Add matching addresses to dictionary
+    for entry in entries:
         if entry.attrib["name"] in object_list:
             result_dict[entry.attrib["name"]] = entry[0].text
+
+    # Find address group objects
+    entries = config_xml.findall(XML_PATHDICTIONARY['address-groups'])
+    for entry in entries:
+        if entry.attrib["name"] in object_list:
+            members = []
+            for member in entry[0]:
+                members.append(member.text)
+            result_dict[entry.attrib["name"]] = members
     # Return Found Objects as Dictionary
     return result_dict
 
@@ -94,6 +109,6 @@ def main():
     master_dictionary = {}
     errors = []
     for firewall in script_config.firewall_hostnames:
-        results = find_objects(firewall, object_list)
+        results = find_address_objects(firewall_config, object_list['addresses'])
         master_dictionary, new_errors = merge_dictionaries(master_dictionary, results)
         errors.append(new_errors)
