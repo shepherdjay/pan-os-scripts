@@ -186,11 +186,12 @@ def main():
         address_groups, addresses = do_things(firewall, script_config.firewall_api_key, object_list.addresses)
         # Merge Dictionaries
         master_address_groups, new_errors = merge_dictionaries(master_address_groups, address_groups)
-        errors.append(new_errors)
+        errors = errors + new_errors
         # Append any errors from merge process
         master_addresses, new_errors = merge_dictionaries(master_addresses, addresses)
 
-    write_output(master_address_groups, master_addresses, set(errors))
+    errors_set = set(errors)
+    write_output(master_address_groups, master_addresses, errors_set)
 
 
 if __name__ == '__main__':
