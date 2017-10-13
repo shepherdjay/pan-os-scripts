@@ -1,6 +1,7 @@
 import pan.xapi
 import yaml
 import xml.etree.ElementTree as ET
+import pprint
 
 XML_PATHDICTIONARY = {
     'addresses': './/*address/entry',
@@ -151,13 +152,15 @@ def retrieve_and_merge(firewall, api_key):
 
 def write_output(address_groups, addresses, errors):
     print("Address Groups")
-    print(address_groups.items())
+    print("GROUP | MEMBER")
+    pprint.pprint(address_groups)
     print("\n")
     print("Address Objects")
-    print(addresses.items())
+    print("OBJECT | VALUE")
+    pprint.pprint(addresses)
     print('\n')
     print('Errors')
-    print(errors)
+    pprint.pprint(errors)
     return True
 
 
@@ -185,11 +188,12 @@ def main():
         address_groups, addresses = do_things(firewall, script_config.firewall_api_key, object_list.addresses)
         # Merge Dictionaries
         master_address_groups, new_errors = merge_dictionaries(master_address_groups, address_groups)
-        errors.append(new_errors)
+        errors = errors + new_errors
         # Append any errors from merge process
         master_addresses, new_errors = merge_dictionaries(master_addresses, addresses)
 
-    write_output(master_address_groups, master_addresses, errors)
+    errors_set = set(errors)
+    write_output(master_address_groups, master_addresses, errors_set)
 
 
 if __name__ == '__main__':
