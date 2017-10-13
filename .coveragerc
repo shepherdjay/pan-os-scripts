@@ -3,8 +3,10 @@ branch = True
 include =
     pancompare.py
     panexport.py
+    panobjectfinder.py
     test_pancompare.py
     test_panexport.py
+    test_panobjectfinder.py
 
 [report]
 exclude_lines =

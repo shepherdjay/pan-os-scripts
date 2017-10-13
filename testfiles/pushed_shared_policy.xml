@@ -26,6 +26,11 @@
                             <member>Google</member>
                         </static>
                     </entry>
+                    <entry name="AllPowerful">
+                        <static>
+                            <member>Google</member>
+                        </static>
+                    </entry>
                 </address-group>
                 <external-list>
                     <recurring>
