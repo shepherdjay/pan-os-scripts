@@ -11,9 +11,11 @@
                         <ip-netmask>10.2.2.2/32</ip-netmask>
                     </entry>
                     <entry name="RANGE">
+                        <tag>RANGE</tag>
                         <ip-range>10.3.3.0-10.3.3.220</ip-range>
                     </entry>
                     <entry name="Google">
+                        <tag>SupremeLeader</tag>
                         <fqdn>www.google.com</fqdn>
                     </entry>
                 </address>

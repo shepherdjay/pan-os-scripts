@@ -85,8 +85,12 @@ def find_address_objects(firewall_config, object_list):
     entries = config_xml.findall(XML_PATHDICTIONARY['addresses'])
     # Add matching addresses to dictionary
     for entry in entries:
+        entry_value = ""
         if entry.attrib["name"] in object_list:
-            result_dict[entry.attrib["name"]] = entry[0].text
+            for all_tags in entry:
+                if all_tags.tag in ['ip-netmask', 'ip-range', 'fqdn']:
+                    entry_value = all_tags.text
+            result_dict[entry.attrib["name"]] = entry_value
     return result_dict
 
 
