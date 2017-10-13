@@ -103,7 +103,8 @@ def find_address_group_objects(firewall_config, object_list):
     for entry in entries:
         if entry.attrib["name"] in object_list:
             members = []
-            for member in entry[0]:
+            members_tags = entry.findall('.//member')
+            for member in members_tags:
                 members.append(member.text)
             result_dict[entry.attrib["name"]] = members
     # Return Found Objects as Dictionary

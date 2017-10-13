@@ -21,6 +21,7 @@
                 </address>
                 <address-group>
                     <entry name="Documentation Group">
+                        <tag>Tagsareworst</tag>
                         <static>
                             <member>DOC1</member>
                             <member>DOC2</member>
