@@ -145,8 +145,13 @@ def retrieve_and_merge(firewall, api_key):
 
 
 def write_output(address_groups, addresses, errors):
+    print("Address Groups")
     print(address_groups.items())
+    print("\n")
+    print("Address Objects")
     print(addresses.items())
+    print('\n')
+    print('Errors')
     print(errors)
     return True
 
