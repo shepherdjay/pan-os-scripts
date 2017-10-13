@@ -1,6 +1,6 @@
 import pan.xapi
 import yaml
-import xml.etree.ElementTree
+import xml.etree.ElementTree as ET
 
 XML_PATHDICTIONARY = {
     'addresses': './/*address/entry',
@@ -79,7 +79,7 @@ def find_address_objects(firewall_config, object_list):
     """
     result_dict = {}
     # Convert to xml tree for use:
-    config_xml = xml.etree.ElementTree.fromstring(firewall_config)
+    config_xml = ET.fromstring(firewall_config)
 
     # Find address objects
     entries = config_xml.findall(XML_PATHDICTIONARY['addresses'])
@@ -87,7 +87,13 @@ def find_address_objects(firewall_config, object_list):
     for entry in entries:
         if entry.attrib["name"] in object_list:
             result_dict[entry.attrib["name"]] = entry[0].text
+    return result_dict
 
+
+def find_address_group_objects(firewall_config, object_list):
+    result_dict = {}
+    # Convert to element tree for use:
+    config_xml = ET.fromstring(firewall_config)
     # Find address group objects
     entries = config_xml.findall(XML_PATHDICTIONARY['address-groups'])
     for entry in entries:
@@ -98,6 +104,15 @@ def find_address_objects(firewall_config, object_list):
             result_dict[entry.attrib["name"]] = members
     # Return Found Objects as Dictionary
     return result_dict
+
+
+def find_group_and_member(firewall_config, object_list):
+    members = {}
+    address_groups = find_address_group_objects(firewall_config, object_list)
+    for key, values in address_groups.items():
+        for value in values:
+            members.update(find_address_objects(firewall_config, value))
+    return address_groups, members
 
 
 def retrieve_firewall_configuration_as_xml(hostname, api_key, config='running'):
@@ -122,31 +137,49 @@ def retrieve_and_merge(firewall, api_key):
     pushed_config = retrieve_firewall_configuration_as_xml(firewall,
                                                            api_key,
                                                            config='pushed-shared-policy')
-    return running_config + pushed_config
+    combined_xml = ET.Element('data')
+    combined_xml.append(ET.fromstring(running_config))
+    combined_xml.append(ET.fromstring(pushed_config))
+
+    return ET.tostring(combined_xml)
 
 
-def write_output(dictionary, errors):
-    print(dictionary.items())
+def write_output(address_groups, addresses, errors):
+    print(address_groups.items())
+    print(addresses.items())
     print(errors)
     return True
 
 
 def do_things(firewall, api_key, object_list):
+    # Retrieve Live Configuration
     firewall_config = retrieve_and_merge(firewall, api_key)
-    results = find_address_objects(firewall_config, object_list)
-    return results
+
+    # Check list of objects for address-groups first
+    address_groups, addresses = find_group_and_member(firewall_config, object_list)
+
+    # Grab Address objects and update members dictionary
+    addresses.update(find_address_objects(firewall_config, object_list))
+
+    return address_groups, addresses
 
 
 def main():
     script_config = Config('config.yml')
     object_list = ObjectList('objectlist.yml')
-    master_dictionary = {}
+    master_address_groups = {}
+    master_addresses = {}
     errors = []
+
     for firewall in script_config.firewall_hostnames:
-        results_for_firewall = do_things(firewall, script_config.firewall_api_key, object_list.addresses)
-        master_dictionary, new_errors = merge_dictionaries(master_dictionary, results_for_firewall)
+        address_groups, addresses = do_things(firewall, script_config.firewall_api_key, object_list.addresses)
+        # Merge Dictionaries
+        master_address_groups, new_errors = merge_dictionaries(master_address_groups, address_groups)
         errors.append(new_errors)
-    write_output(master_dictionary, errors)
+        # Append any errors from merge process
+        master_addresses, new_errors = merge_dictionaries(master_addresses, addresses)
+
+    write_output(master_address_groups, master_addresses, errors)
 
 
 if __name__ == '__main__':
