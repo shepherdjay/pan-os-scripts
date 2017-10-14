@@ -205,11 +205,12 @@ def filter_the_things(rule, subkeylist, filterlist):
             else:
                 values.add(rule[1][subkey])
     # If asking for any then have filter inherit the found value.
-    if filters == {'any'}:
-        filters = values
-    if filters & values:
+    if filters == {'any'} or values == {'any'}:
         return rule[0]
-    return None
+    elif filters & values:
+        return rule[0]
+    else:
+        return None
 
 
 def filter_dataplane_rules(dataplane_raw, filters):

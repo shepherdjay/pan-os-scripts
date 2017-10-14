@@ -7,6 +7,7 @@ firewall_api_key: APIKEYGOESHERE
 rule_filters:
   zones:
     - DMZ
+    - Dat Zone
   ip_addresses:
     - 192.168.0.0/16
   rule_names:
