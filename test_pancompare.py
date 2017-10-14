@@ -47,8 +47,16 @@ class PancompareTests(TestCase):
         with open(get_path('raw_dataplane_nomatch.txt'), 'r') as file:
             test_rule = file.read()
         filters = script_config.rule_filters
-        expected_rule_list = ['Test Dataplane', 'IPV6 New Version']
+        expected_rule_list = {'Test Dataplane', 'IPV6 New Version'}
 
         filtered_rule_list = pancompare.filter_dataplane_rules(test_rule, filters)
 
         self.assertEqual(expected_rule_list, filtered_rule_list)
+
+    def test_class_method_properly_formatted_filters_equal(self):
+        """
+        Verify that post Issue16 fix a fully provided filter is the same as sanatized
+        :return:
+        """
+        script_config = pancompare.Config(get_path('filters_test.yml'))
+        self.assertEqual(script_config.rule_filters, script_config.rule_filters_old)

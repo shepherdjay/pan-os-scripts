@@ -7,6 +7,7 @@ import re
 import netaddr
 import pan.xapi
 import yaml
+from panexport import safeget
 
 
 class Config:
@@ -16,7 +17,31 @@ class Config:
         self.top_domain = config['top_domain']
         self.firewall_api_key = config['firewall_api_key']
         self.firewall_hostnames = config['firewall_hostnames']
-        self.rule_filters = config['rule_filters']
+        self.rule_filters = self.prepare_filter(config['rule_filters'])
+        self.rule_filters_old = config['rule_filters']
+
+    def prepare_filter(self, dirty_filters):
+        """
+        Checks the supplied filters for errors or omissions.
+        Allows for optional filters #Issue 15
+        :param dirty_filters: the supplied filters the config
+        :return: filter needed for script
+        """
+        sanitized_filter = {}
+        filter_map = {'zones': ['any'],
+                      'ip_addresses': ['any'],
+                      'rule_names': {'include': [], 'exclude': []}}
+        for filter_name, default_value in filter_map.items():
+            filter_value = safeget(dirty_filters, filter_name)
+            if not filter_value:
+                sanitized_filter[filter_name] = default_value
+            else:
+                sanitized_filter[filter_name] = filter_value
+        try:
+            sanitized_filter['rule_names'] = sanitized_filter['rule_names'][0]
+        except(KeyError):
+            pass
+        return sanitized_filter
 
 
 def retrieve_dataplane(hostname, api_key):
@@ -179,6 +204,9 @@ def filter_the_things(rule, subkeylist, filterlist):
                 values.update(rule[1][subkey])
             else:
                 values.add(rule[1][subkey])
+    # If asking for any then have filter inherit the found value.
+    if filters == {'any'}:
+        filters = values
     if filters & values:
         return rule[0]
     return None
@@ -228,6 +256,7 @@ def filter_dataplane_rules(dataplane_raw, filters):
         dataplane_rules[rule]['source'] = convert_to_ipobject(dataplane_rules[rule]['source'])
         dataplane_rules[rule]['destination'] = convert_to_ipobject(dataplane_rules[rule]['destination'])
 
+    ## ZoneFilter
     matched_source_zone = set()
     matched_destination_zone = set()
     for rule in dataplane_rules.items():
