@@ -23,7 +23,7 @@ class Config:
     def prepare_filter(self, dirty_filters):
         """
         Checks the supplied filters for errors or omissions.
-        Allows for optional filters #Issue 15
+        Allows for optional filters Issue #16
         :param dirty_filters: the supplied filters the config
         :return: filter needed for script
         """
@@ -204,7 +204,8 @@ def filter_the_things(rule, subkeylist, filterlist):
                 values.update(rule[1][subkey])
             else:
                 values.add(rule[1][subkey])
-    # If asking for any then have filter inherit the found value.
+    # If asking for 'any' in either filter or values then return rule.
+    # Issue #17
     if filters == {'any'} or values == {'any'}:
         return rule[0]
     elif filters & values:
