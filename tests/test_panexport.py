@@ -8,7 +8,7 @@ from unittest.mock import patch
 import xmltodict
 from pandas import read_excel
 
-import panexport
+from panosscripts import panexport
 
 TEST_FILE_DIR = "testfiles/"
 
@@ -27,7 +27,7 @@ class TestPanExport(TestCase):
 
         self.assertEqual(padded, expected)
 
-    @patch('panexport.datetime')
+    @patch('panosscripts.panexport.datetime')
     def test_filename_format(self, mock_now):
         firewall = "test_firewall"
         expected_filename = "2016-01-01-{}-combined-rules.xlsx".format(firewall)

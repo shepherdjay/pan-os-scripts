@@ -16,8 +16,9 @@ HEADERS_ORDER = ['@name', 'action', 'tag', 'rule-type', 'from', 'source', 'negat
                  'hip-profiles',
                  'to', 'destination', 'negate-destination', 'application', 'service', 'profile-setting', 'description']
 
-__author__ = 'Jay Shepherd'
 
+
+from panosscripts.models import Config
 
 class Config:
     def __init__(self, filename):

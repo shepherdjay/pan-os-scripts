@@ -2,5 +2,6 @@ config.yml
 .idea/
 *.xlsx
 .cache/
-!testfiles/*
+!tests/testfiles/*
 __pycache__/
+.pytest_cache/

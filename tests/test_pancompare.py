@@ -3,7 +3,8 @@ from unittest import TestCase
 
 import netaddr
 
-import pancompare
+import panosscripts.models
+from panosscripts import pancompare
 
 TEST_FILE_DIR = "testfiles/"
 
@@ -24,7 +25,7 @@ class PancompareTests(TestCase):
         included filters test file.
         :return:
         """
-        script_config = pancompare.Config(get_path('filters_test.yml'))
+        script_config = panosscripts.models.Config(get_path('filters_test.yml'))
         with open(get_path('raw_dataplane_nomatch.txt'), 'r') as file:
             test_rule = file.read()
         filters = script_config.rule_filters
