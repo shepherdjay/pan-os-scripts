@@ -12,7 +12,7 @@ HEADERS_DEFAULT_MAP = {'rule-type': 'universal', 'negate-source': 'no', 'negate-
 
 HEADERS_REMOVE = ['option', 'profile-setting', 'disabled', 'log-end', 'log-start', 'category']
 
-HEADERS_ORDER = ['@name', 'action', 'tag', 'rule-type', 'from', 'source', 'negate-source', 'source-user',
+HEADERS_ORDER = ['name', 'action', 'tag', 'rule-type', 'from', 'source', 'negate-source', 'source-user',
                  'hip-profiles',
                  'to', 'destination', 'negate-destination', 'application', 'service', 'profile-setting', 'description']
 
@@ -36,7 +36,7 @@ def retrieve_firewall_configuration(hostname, api_key, config='running'):
 
 def combine_the_rulebase(pushed_config, running_config):
     pre_rulebase = safeget(pushed_config, 'policy', 'panorama', 'pre-rulebase', 'security', 'rules', 'entry')
-    device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase', 'entry')
+    device_rulebase = safeget(running_config, 'config', 'devices', 'entry', 'vsys', 'entry', 'rulebase', 'security','rules','entry')
     post_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'security', 'rules', 'entry')
     default_rulebase = safeget(pushed_config, 'policy', 'panorama', 'post-rulebase', 'default-security-rules', 'rules',
                                'entry')
