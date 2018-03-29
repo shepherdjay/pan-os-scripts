@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from unittest import TestCase
 from unittest.mock import patch
+from collections import OrderedDict
 
 import xmltodict
 from pandas import read_excel
@@ -79,7 +80,7 @@ class FileTests(TestCase):
         :return: Python Dictionary
         """
         data = read_excel(filepath)
-        return data.to_dict()
+        return [OrderedDict(row) for i, row in data.iterrows()]
 
     def test_write_to_excel(self):
         self.maxDiff = None

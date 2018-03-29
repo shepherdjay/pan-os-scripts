@@ -12,7 +12,7 @@ HEADERS_DEFAULT_MAP = {'rule-type': 'universal', 'negate-source': 'no', 'negate-
 
 HEADERS_REMOVE = ['option', 'profile-setting', 'disabled', 'log-end', 'log-start', 'category']
 
-HEADERS_ORDER = ['name', 'action', 'tag', 'rule-type', 'from', 'source', 'negate-source', 'source-user',
+HEADERS_ORDER = ['@name', 'action', 'tag', 'rule-type', 'from', 'source', 'negate-source', 'source-user',
                  'hip-profiles',
                  'to', 'destination', 'negate-destination', 'application', 'service', 'profile-setting', 'description']
 
