@@ -75,9 +75,9 @@ class FileTests(TestCase):
 
     def excel_to_dictionary(self, filepath):
         """
-        Uses pandas to convert an excel sheet to a python dictionary.
+        Uses pandas to convert an excel sheet to a list of OrderedDicts so we compare content as well as presentation
         :param filepath: Path to excel file
-        :return: Python Dictionary
+        :return: List of OrderedDicts
         """
         data = read_excel(filepath)
         return [OrderedDict(row) for i, row in data.iterrows()]
