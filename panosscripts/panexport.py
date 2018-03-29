@@ -16,17 +16,7 @@ HEADERS_ORDER = ['@name', 'action', 'tag', 'rule-type', 'from', 'source', 'negat
                  'hip-profiles',
                  'to', 'destination', 'negate-destination', 'application', 'service', 'profile-setting', 'description']
 
-
-
 from panosscripts.models import Config
-
-class Config:
-    def __init__(self, filename):
-        with open(filename, 'r') as stream:
-            config = yaml.load(stream)
-        self.top_domain = config['top_domain']
-        self.firewall_api_key = config['firewall_api_key']
-        self.firewall_hostnames = config['firewall_hostnames']
 
 
 def retrieve_firewall_configuration(hostname, api_key, config='running'):
