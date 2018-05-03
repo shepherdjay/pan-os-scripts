@@ -2,12 +2,13 @@ language: python
 python:
   - "3.4"
   - "3.5"
+  - "3.6"
   - "nightly"
 
 branches:
   only:
     - master
-    - dev
+    - testing
 
 matrix:
   allow_failures:
@@ -16,9 +17,10 @@ matrix:
 install:
   - pip install -r requirements.txt
   - pip install -r requirements-tests.txt
+  - pip install codecov
 
  #command to run tests
 script: py.test --cov
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - codecov
