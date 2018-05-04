@@ -1,5 +1,5 @@
-pytest
-pytest-cov
+pytest==3.5.1
+pytest-cov==2.5.1
 openpyxl==2.3.5
 pandas==0.18.1
 xlrd==0.9.4
