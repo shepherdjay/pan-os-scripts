@@ -1,5 +1,5 @@
 pytest
 pytest-cov
-openpyxl==2.5.2
+openpyxl==2.4.9
 pandas==0.18.1
 xlrd==0.9.4
