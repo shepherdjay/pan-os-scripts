@@ -4,3 +4,5 @@ config.yml
 .cache/
 !testfiles/*
 __pycache__/
+.pytest_cache/
+venv/
