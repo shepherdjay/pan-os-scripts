@@ -31,9 +31,64 @@ class PancompareTests(TestCase):
 
         self.assertTrue(type(pancompare.filter_dataplane_rules(test_rule, filters) is None))
 
+    def test_dataplane_some_match(self):
+        """
+        This test processes the dataplane_somematch.txt file which should
+        contain 2 out of 3 rules that match the included filters test file.
+        :return:
+        """
+        script_config = pancompare.Config(get_path('filters_test.yml'))
+        with open(get_path('raw_dataplane_somematch.txt'), 'r') as file:
+            test_dataplane = file.read()
+        filters = script_config.rule_filters
+        expected_rule_list = {'Test Dataplane', 'Allow Spam'}
+
+        result = pancompare.filter_dataplane_rules(test_dataplane, filters)
+
+        self.assertEqual(expected_rule_list, result)
+
+    def test_dataplane_all_match(self):
+        """
+        This test processes the dataplane_allmatch.txt file which should
+        only rules that match the included filters_test.yml file.
+        :return:
+        """
+        script_config = pancompare.Config(get_path('filters_test.yml'))
+        with open(get_path('raw_dataplane_allmatch.txt'), 'r') as file:
+            test_dataplane = file.read()
+        filters = script_config.rule_filters
+        expected_rule_list = {'Test Dataplane', 'Allow Spam', 'CaSe-Sensative', 'Multiname Zone'}
+
+        result = pancompare.filter_dataplane_rules(test_dataplane, filters)
+
+        self.assertEqual(expected_rule_list, result)
+
     def test_map_to_address(self):
         host = pancompare.map_to_address("192.168.1.1")
         network = pancompare.map_to_address("192.168.0.1/32")
 
         self.assertIsInstance(host, netaddr.IPAddress)
         self.assertIsInstance(network, netaddr.IPNetwork)
+
+    def test_empty_filter(self):
+        """
+        This test is for Issue 16 in which the filters are not actually optional.
+        :return: 
+        """
+        script_config = pancompare.Config(get_path('filters_test_issue16.yml'))
+        with open(get_path('raw_dataplane_nomatch.txt'), 'r') as file:
+            test_rule = file.read()
+        filters = script_config.rule_filters
+        expected_rule_list = {'Test Dataplane', 'IPV6 New Version'}
+
+        filtered_rule_list = pancompare.filter_dataplane_rules(test_rule, filters)
+
+        self.assertEqual(expected_rule_list, filtered_rule_list)
+
+    def test_class_method_properly_formatted_filters_equal(self):
+        """
+        Verify that post Issue16 fix a fully provided filter is the same as sanatized
+        :return:
+        """
+        script_config = pancompare.Config(get_path('filters_test.yml'))
+        self.assertEqual(script_config.rule_filters, script_config.rule_filters_old)

@@ -84,7 +84,7 @@ class FileTests(TestCase):
     def test_write_to_excel(self):
         self.maxDiff = None
         test_filename = os.path.join(self.tmp_dir, "test_write_to_excel.xlsx")
-        with open(get_test_path('test_rules.xml'), mode='r') as file:
+        with open(get_test_path('test_rules_xml.xml'), mode='r') as file:
             example_rules = xmltodict.parse(file.read())['rules']['entry']
 
         panexport.write_to_excel(rule_list=example_rules,
