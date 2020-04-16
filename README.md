@@ -1,3 +1,12 @@
+---
+**NOTE**
+
+When I wrote these scripts there was no support for exporting rules to an excel spreadsheet. PanOS now supports this natively. The Dataplane script may still be useful but due to lack of personal testing equipment I have been unable to verify it on versions of PANOS greater than 7.0 so use at own risk.
+
+I keep this repo on my profile as a reminder of how far I have come as this was one of the very first python projects I attempted. The code is very very ugly especially at the beginning. But it is a beautiful reminder to me.
+
+---
+
 ## PaloAlto Firewall Scripts
 [![Build Status](https://travis-ci.org/shepherdjay/pan-os-scripts.svg?branch=master)](https://travis-ci.org/shepherdjay/pan-os-scripts) [![codecov](https://codecov.io/gh/shepherdjay/pan-os-scripts/branch/master/graph/badge.svg)](https://codecov.io/gh/shepherdjay/pan-os-scripts)
 
