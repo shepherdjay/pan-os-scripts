@@ -1,6 +1,7 @@
-pan-python==0.13.0
-PyYAML==5.3.1
-xmltodict==0.11.0
-XlsxWriter==1.0.4
 netaddr==0.7.19
-tablib==0.12.1
+pan-python==0.16.0
+pyyaml==5.3.1
+tablib==1.1.0
+xlrd==1.2.0
+xlsxwriter==1.2.8
+xmltodict==0.12.0
