@@ -12,7 +12,7 @@ import yaml
 class Config:
     def __init__(self, filename):
         with open(filename, 'r') as stream:
-            config = yaml.load(stream)
+            config = yaml.safe_load(stream)
         self.top_domain = config['top_domain']
         self.firewall_api_key = config['firewall_api_key']
         self.firewall_hostnames = config['firewall_hostnames']
@@ -72,11 +72,11 @@ def convert_to_ipobject(string):
     :return: An IPSet of extracted IPs
     """
     ipv4_range_regex = re.compile(
-        '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})-([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})')
+        r'([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})-([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})')
     ipv4_address_regex = re.compile(
-        '([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(?:\/[0-9]+)*)')
+        r'([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(?:\/[0-9]+)*)')
     ipv6_address_regex = re.compile(
-        '([0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}(?:\/[0-9]+)*)')
+        r'([0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}(?:\/[0-9]+)*)')
     ip_hex_regex = re.compile(r'0x([0-9a-f]+)(\/\d+)')
 
     if string == 'any':
